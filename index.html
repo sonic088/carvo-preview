@@ -20,9 +20,15 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="CARVO - Fashion for everyone">
 
+  <!-- Full-screen like a native app: viewport-fit=cover lets the page draw under the
+       iPhone status bar / home indicator; black-translucent keeps the status bar
+       (white clock/battery) on top of our content, as in the SHEIN app. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="CARVO">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
@@ -32,6 +38,53 @@
   <title>CARVO</title>
   <meta name="theme-color" content="#FD7006">
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* Same colour as the top of the Home hero, so nothing white shows under the
+       status bar while Flutter boots. */
+    html, body { margin: 0; padding: 0; height: 100%; background: #52A4E8; }
+    /* Probe: CSS env() is the only way to read the iOS safe areas. */
+    #carvo-safe-area {
+      position: fixed; top: 0; left: 0; width: 0; height: 0;
+      visibility: hidden; pointer-events: none;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-right: env(safe-area-inset-right, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-left: env(safe-area-inset-left, 0px);
+    }
+  </style>
+  <script>
+    (function () {
+      // Flutter's full-page embedding replaces our <meta name="viewport"> with its own
+      // (without viewport-fit=cover). Put viewport-fit=cover back whenever that happens.
+      function fixViewport() {
+        var metas = document.head.querySelectorAll('meta[name="viewport"]');
+        for (var i = 0; i < metas.length; i++) {
+          var c = metas[i].getAttribute('content') || '';
+          if (c.indexOf('viewport-fit') < 0) metas[i].setAttribute('content', c + ', viewport-fit=cover');
+        }
+      }
+      fixViewport();
+      new MutationObserver(fixViewport).observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['content'] });
+
+      // Read env(safe-area-inset-*) through the probe. Flutter web always reports zero
+      // padding, so lib/safe_area_web.dart calls this and merges the values into MediaQuery.
+      function probe() {
+        var el = document.getElementById('carvo-safe-area');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'carvo-safe-area';
+          (document.body || document.documentElement).appendChild(el);
+        }
+        return el;
+      }
+      window.carvoSafeArea = function () {
+        var cs = getComputedStyle(probe());
+        return [parseFloat(cs.paddingTop) || 0, parseFloat(cs.paddingRight) || 0,
+                parseFloat(cs.paddingBottom) || 0, parseFloat(cs.paddingLeft) || 0];
+      };
+    })();
+  </script>
 </head>
 <body>
   <!--
