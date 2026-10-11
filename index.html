@@ -107,7 +107,10 @@
         // iPhone/iPod standalone fills the whole screen; screen.* don't swap with orientation on iOS.
         if (/iPhone|iPod/.test(ua) || q.get('pwahost') === '1') {
           var sw = screen.width, sh = screen.height;
-          h = Math.max(h, window.innerWidth > window.innerHeight ? Math.min(sw, sh) : Math.max(sw, sh));
+          var land = window.innerWidth > window.innerHeight;
+          // screen.* are device pt; innerWidth / real width converts them to CSS px (differs under Page Zoom)
+          var realW = land ? Math.max(sw, sh) : Math.min(sw, sh), realH = land ? Math.min(sw, sh) : Math.max(sw, sh);
+          h = Math.max(h, realH * window.innerWidth / realW);
         }
         return h;
       }
@@ -127,6 +130,20 @@
           host.style.height = fullHeight() + 'px';
         }
       }
+      // Safari "Page Zoom" (aA menu / Settings > Safari > Page Zoom) also applies to the home-screen app and
+      // changes the size of a CSS px: at 75 % the 430 pt iPhone reports innerWidth 573, so Flutter lays the
+      // app out 573 wide and everything looks 25 % too small (clipped circle labels, short hero). In host mode
+      // the app fills the screen, so screen width / innerWidth is that zoom; lib/safe_area.dart lays the app
+      // out at the real width and scales it back up. 1 everywhere else. ?pzoom=0.75 forces it for testing.
+      window.carvoPageZoom = function () {
+        var forced = parseFloat(q.get('pzoom') || '');
+        if (forced > 0) return forced;
+        if (!host || !/iPhone|iPod/.test(ua)) return 1;
+        var sw = screen.width, sh = screen.height;
+        var real = window.innerWidth > window.innerHeight ? Math.max(sw, sh) : Math.min(sw, sh);
+        var z = real / window.innerWidth;
+        return (z > 0.4 && z < 2.5 && Math.abs(z - 1) > 0.02) ? z : 1;
+      };
       window.carvoHostElement = function () {
         if (!useHost) return null;
         if (!host) {
