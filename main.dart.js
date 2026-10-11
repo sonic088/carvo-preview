@@ -150807,7 +150807,7 @@ s($,"c2o","btX",()=>$.iO().h(0,"hint"))
 s($,"c2s","btY",()=>$.iO().h(0,"htag"))
 s($,"c2y","bGF",()=>$.iO().h(0,"mailbadge")==="1")
 s($,"c2D","bGH",()=>{var q=A.aA().gaf().h(0,"sbstrip")
-return q==null?"black":q})
+return q==null?"white":q})
 s($,"bZU","bEG",()=>A.aA().gaf().h(0,"hhint"))
 s($,"c2t","Dv",()=>{var q,p=A.aA().gaf().h(0,"htheme")
 A:{if("pink"===p){q="pink"

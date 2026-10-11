@@ -43,13 +43,15 @@
     /* White like the tab bar, so a short layout viewport can never show a coloured band. */
     html, body { margin: 0; padding: 0; height: 100%; background: #FFFFFF; }
     /* iPhone home-screen app: the page itself never scrolls or bounces; Flutter draws into #carvo-host. */
-    /* height is set in JS to the host's height: with bottom: 0 the body ended at WebKit's short layout viewport
-       and its overflow: hidden clipped the bottom of the app (v82: tab bar cut off). */
+    /* Nothing here is position: fixed. In the standalone app WebKit sizes the layout viewport short by the status
+       bar and clips fixed boxes (and fixed bodies) to it, so v82/v83 laid the app out full height but only the top
+       ~873 of 932 pt was painted (tab bar cut off). Normal-flow / absolute boxes are painted to the real screen
+       edge, so html/body are 100vh (JS sets the same height in px) and the host is absolute. */
     html.carvo-pwa, html.carvo-pwa body {
-      position: fixed; top: 0; left: 0; width: 100%; overflow: hidden;
+      position: static; width: 100%; height: 100vh; overflow: hidden;
       overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
     }
-    #carvo-host { position: fixed; left: 0; top: 0; width: 100%; overflow: hidden; background: #FFFFFF; }
+    #carvo-host { position: absolute; left: 0; top: 0; width: 100%; height: 100vh; overflow: hidden; background: #FFFFFF; }
     /* Probe: CSS env() is the only way to read the iOS safe areas. */
     #carvo-safe-area {
       position: fixed; top: 0; left: 0; width: 0; height: 0;
@@ -127,7 +129,7 @@
         var vv = window.visualViewport;
         if (keyboardOpen()) {
           // keyboard up: Flutter gets no keyboard insets in host mode, so end the host at the keyboard
-          host.style.top = vv.offsetTop + 'px';
+          host.style.top = (vv.offsetTop + (window.scrollY || 0)) + 'px';
           host.style.height = vv.height + 'px';
         } else {
           host.style.top = '0px';
