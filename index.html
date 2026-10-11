@@ -43,8 +43,10 @@
     /* White like the tab bar, so a short layout viewport can never show a coloured band. */
     html, body { margin: 0; padding: 0; height: 100%; background: #FFFFFF; }
     /* iPhone home-screen app: the page itself never scrolls or bounces; Flutter draws into #carvo-host. */
+    /* height is set in JS to the host's height: with bottom: 0 the body ended at WebKit's short layout viewport
+       and its overflow: hidden clipped the bottom of the app (v82: tab bar cut off). */
     html.carvo-pwa, html.carvo-pwa body {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;
+      position: fixed; top: 0; left: 0; width: 100%; overflow: hidden;
       overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
     }
     #carvo-host { position: fixed; left: 0; top: 0; width: 100%; overflow: hidden; background: #FFFFFF; }
@@ -110,7 +112,9 @@
           var land = window.innerWidth > window.innerHeight;
           // screen.* are device pt; innerWidth / real width converts them to CSS px (differs under Page Zoom)
           var realW = land ? Math.max(sw, sh) : Math.min(sw, sh), realH = land ? Math.min(sw, sh) : Math.max(sw, sh);
-          h = Math.max(h, realH * window.innerWidth / realW);
+          // The real screen height, converted to CSS px. Not max()ed with innerHeight: that can be off in
+          // standalone mode (short by the status bar, or long under Page Zoom).
+          h = realH * window.innerWidth / realW;
         }
         return h;
       }
@@ -129,6 +133,10 @@
           host.style.top = '0px';
           host.style.height = fullHeight() + 'px';
         }
+        // html/body exactly as tall as the host, so nothing above it clips the app
+        var total = (parseFloat(host.style.top) || 0) + (parseFloat(host.style.height) || 0);
+        document.documentElement.style.height = total + 'px';
+        document.body.style.height = total + 'px';
       }
       // Safari "Page Zoom" (aA menu / Settings > Safari > Page Zoom) also applies to the home-screen app and
       // changes the size of a CSS px: at 75 % the 430 pt iPhone reports innerWidth 573, so Flutter lays the
