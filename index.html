@@ -40,9 +40,14 @@
   <link rel="manifest" href="manifest.json">
 
   <style>
-    /* Same colour as the top of the Home hero, so nothing white shows under the
-       status bar while Flutter boots. */
-    html, body { margin: 0; padding: 0; height: 100%; background: #52A4E8; }
+    /* White like the tab bar, so a short layout viewport can never show a coloured band. */
+    html, body { margin: 0; padding: 0; height: 100%; background: #FFFFFF; }
+    /* iPhone home-screen app: the page itself never scrolls or bounces; Flutter draws into #carvo-host. */
+    html.carvo-pwa, html.carvo-pwa body {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;
+      overscroll-behavior: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    }
+    #carvo-host { position: fixed; left: 0; top: 0; width: 100%; overflow: hidden; background: #FFFFFF; }
     /* Probe: CSS env() is the only way to read the iOS safe areas. */
     #carvo-safe-area {
       position: fixed; top: 0; left: 0; width: 0; height: 0;
@@ -81,7 +86,64 @@
       window.carvoSafeArea = function () {
         var cs = getComputedStyle(probe());
         return [parseFloat(cs.paddingTop) || 0, parseFloat(cs.paddingRight) || 0,
-                parseFloat(cs.paddingBottom) || 0, parseFloat(cs.paddingLeft) || 0];
+                // keyboard up: the host already ends at the keyboard, no home-indicator inset there
+                keyboardOpen() ? 0 : (parseFloat(cs.paddingBottom) || 0), parseFloat(cs.paddingLeft) || 0];
+      };
+
+      // iOS home-screen app (standalone + black-translucent + viewport-fit=cover): WebKit reports the layout
+      // viewport (documentElement.clientHeight, innerHeight, 100vh) short by about the status-bar height, and
+      // Flutter's full-page mode sizes itself from exactly that, leaving a band at the bottom of the screen.
+      // There we give Flutter its own host element sized from the real screen instead (initializeEngine
+      // hostElement, see flutter_bootstrap.js). Safari tabs, desktop and ?frame=ios keep full-page mode.
+      // ?pwahost=1 forces it for testing.
+      var ua = navigator.userAgent || '';
+      var isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      var standalone = navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+      var q = new URLSearchParams(location.search);
+      var useHost = q.get('pwahost') === '1' || (isIOS && standalone && q.get('frame') !== 'ios' && q.get('pwahost') !== '0');
+      var host = null;
+      function fullHeight() {
+        var h = window.innerHeight;
+        // iPhone/iPod standalone fills the whole screen; screen.* don't swap with orientation on iOS.
+        if (/iPhone|iPod/.test(ua) || q.get('pwahost') === '1') {
+          var sw = screen.width, sh = screen.height;
+          h = Math.max(h, window.innerWidth > window.innerHeight ? Math.min(sw, sh) : Math.max(sw, sh));
+        }
+        return h;
+      }
+      function keyboardOpen() {
+        var vv = window.visualViewport;
+        return !!(host && vv && vv.height < fullHeight() * 0.75);
+      }
+      function sizeHost() {
+        if (!host) return;
+        var vv = window.visualViewport;
+        if (keyboardOpen()) {
+          // keyboard up: Flutter gets no keyboard insets in host mode, so end the host at the keyboard
+          host.style.top = vv.offsetTop + 'px';
+          host.style.height = vv.height + 'px';
+        } else {
+          host.style.top = '0px';
+          host.style.height = fullHeight() + 'px';
+        }
+      }
+      window.carvoHostElement = function () {
+        if (!useHost) return null;
+        if (!host) {
+          document.documentElement.classList.add('carvo-pwa');
+          host = document.createElement('div');
+          host.id = 'carvo-host';
+          document.body.appendChild(host);
+          sizeHost();
+          window.addEventListener('resize', sizeHost);
+          window.addEventListener('orientationchange', function () { setTimeout(sizeHost, 300); });
+          if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', sizeHost);
+            window.visualViewport.addEventListener('scroll', sizeHost);
+          }
+          document.addEventListener('visibilitychange', sizeHost);
+        }
+        return host;
       };
     })();
   </script>

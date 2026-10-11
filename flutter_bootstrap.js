@@ -42,4 +42,12 @@ _flutter.buildConfig = {"engineRevision":"deb287481e3ce9468f3434937ced4240a70539
 
 
 // Flutter's built-in service worker is deprecated; CARVO uses its own sw.js (registered in index.html).
-_flutter.loader.load();
+// On the iPhone home-screen app, index.html hands us a host element sized to the real screen (WebKit's layout
+// viewport is short there); everywhere else carvoHostElement() returns null and Flutter takes the full page.
+_flutter.loader.load({
+  onEntrypointLoaded: async function (engineInitializer) {
+    var host = window.carvoHostElement ? window.carvoHostElement() : null;
+    var appRunner = await engineInitializer.initializeEngine(host ? { hostElement: host } : {});
+    await appRunner.runApp();
+  },
+});
