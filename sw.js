@@ -1,5 +1,5 @@
 // CARVO PWA service worker: network-first with cache fallback (offline support).
-const CACHE = 'carvo-v133'; // bump to force clients to drop old caches
+const CACHE = 'carvo-v134'; // bump to force clients to drop old caches
 const CORE = ['./', 'index.html', 'manifest.json', 'flutter_bootstrap.js', 'main.dart.js', 'favicon.png', 'icons/Icon-192.png', 'splash/splash_bg.jpg', 'splash/splash_wordmark.png', 'splash/splash_tagline.png'];
 
 self.addEventListener('install', (event) => {
@@ -26,6 +26,7 @@ self.addEventListener('fetch', (event) => {
         }
         return res;
       })
-      .catch(() => caches.match(req).then((r) => r || caches.match('index.html')))
+      // only page loads fall back to index.html; a failed font/asset must not be answered with HTML
+      .catch(() => caches.match(req).then((r) => r || (req.mode === 'navigate' ? caches.match('index.html') : Response.error())))
   );
 });
