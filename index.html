@@ -39,7 +39,8 @@
   <meta name="theme-color" content="#FD7006">
   <link rel="manifest" href="manifest.json">
   <link rel="preload" as="image" href="splash/splash_bg.jpg">
-  <link rel="preload" as="image" href="splash/splash_lockup.png">
+  <link rel="preload" as="image" href="splash/splash_wordmark.png">
+  <link rel="preload" as="image" href="splash/splash_tagline.png">
 
   <style>
     /* White like the tab bar, so a short layout viewport can never show a coloured band. */
@@ -70,9 +71,11 @@
       background: #F4F2F0 url("splash/splash_bg.jpg") center / cover no-repeat;
       -webkit-user-select: none; user-select: none; pointer-events: none;
     }
-    #carvo-splash img {
-      position: absolute; left: 50%; top: calc(42.6% - 30px); width: 268.5px; height: 87px; margin-left: -134.25px;
-    }
+    #carvo-splash-lockup { position: absolute; left: 50%; top: calc(42.6% - 30px); width: 268.5px; height: 87px; margin-left: -134.25px; }
+    #carvo-splash-lockup img.wm { position: absolute; left: 0; top: 0; width: 268.5px; height: 87px; }
+    /* Tagline clip: grows letter by letter, prefix centred (left/width set by the typing script). */
+    #carvo-splash-tag { position: absolute; top: 73.5px; height: 8.5px; width: 0; left: 134.125px; overflow: hidden; }
+    #carvo-splash-tag img { position: absolute; left: 0; top: 0; width: 192.75px; height: 8.5px; max-width: none; }
   </style>
   <script>
     (function () {
@@ -190,10 +193,27 @@
   </script>
 </head>
 <body>
-  <div id="carvo-splash" aria-label="CARVO"><img src="splash/splash_lockup.png" alt="CARVO - Fashion for every you"></div>
+  <div id="carvo-splash" aria-label="CARVO - Fashion for every you"><div id="carvo-splash-lockup"><img class="wm" src="splash/splash_wordmark.png" alt=""><div id="carvo-splash-tag"><img src="splash/splash_tagline.png" alt=""></div></div></div>
   <script>
     (function () {
       var el = document.getElementById('carvo-splash');
+      // Tagline typing, same as lib/launch_splash.dart (Trends pull-to-refresh timing: a character every 14 ms,
+      // no easing, no cursor, prefix centred). t0 = first frame with both images ready, shared with Flutter.
+      var STEP = 14, TX = 37.75, TW = 192.75, EDGES = [4.0, 15.25, 24.0, 34.75, 41.0, 53.0, 64.0, 64.0, 79.5, 91.5, 101.25, 101.25, 116.25, 127.5, 136.0, 146.25, 155.75, 155.75, 171.75, 183.25, 192.75];
+      var tag = document.getElementById('carvo-splash-tag');
+      var imgs = el.getElementsByTagName('img');
+      function ready() { for (var i = 0; i < imgs.length; i++) if (!imgs[i].complete) return false; return true; }
+      function tick() {
+        if (!el) return;
+        if (window.carvoSplashT0 == null && ready()) window.carvoSplashT0 = performance.now();
+        var k = 0;
+        if (window.carvoSplashT0 != null) k = Math.min(EDGES.length, Math.floor((performance.now() - window.carvoSplashT0) / STEP) + 1);
+        var e = k ? EDGES[k - 1] : 0;
+        tag.style.width = e + 'px';
+        tag.style.left = (TX + (TW - e) / 2) + 'px';
+        if (k < EDGES.length) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
       function size() { if (el && window.carvoSplashHeight) el.style.height = window.carvoSplashHeight() + 'px'; }
       size();
       window.addEventListener('resize', size);
