@@ -13211,7 +13211,7 @@ _.z=0
 _.as=_.Q=!1
 _.at=!0
 _.ax=!1
-_.ay=19
+_.ay=18
 _.ch=0
 _.CW=d
 _.cx=$
@@ -17099,7 +17099,7 @@ _.r=_.f=_.e=_.d=0
 _.x=_.w=!1
 _.y=!0
 _.Q=_.z=!1
-_.as=19
+_.as=18
 _.at=0
 _.ax=a
 _.ay=b
@@ -70519,7 +70519,7 @@ a5.UI(a3,B.vZ,A.G())
 d.restore()},
 af(a){return a.b!==this.b||a.c!==this.c||a.d!==this.d}}
 A.IO.prototype={
-R(){return new A.Su(B.SV,new A.ct(0,$.au(),t.N8),0,!1,!1,!0,!1,19,0,A.a([],t.BJ),$,null)}}
+R(){return new A.Su(B.SV,new A.ct(0,$.au(),t.N8),0,!1,!1,!0,!1,18,0,A.a([],t.BJ),$,null)}}
 A.Su.prototype={
 gnB(){var s,r,q,p=this,o=p.r
 if(o===$){s=p.a.e
@@ -70630,7 +70630,7 @@ s=e.w
 o=s<=0
 m=o?B.b_:new A.eq(e.x,new A.b5W(e),d,d,t.Id)
 m=A.p(d,m,s+1,d,0,0,0,d)
-return new A.E(B.w,d,B.u,B.t,A.a([m,new A.dy(e.gaZD(),g,d,t.WA),A.bG(0,o?B.b_:new A.O4(e.a.d,s,B.m.Z("Fashion for Algeria",0,e.yb$),e.V8$,d),0,0,0),f],n),d)},
+return new A.E(B.w,d,B.u,B.t,A.a([m,new A.dy(e.gaZD(),g,d,t.WA),A.bG(0,o?B.b_:new A.O4(e.a.d,s,B.m.Z("Style Made for You",0,e.yb$),e.V8$,d),0,0,0),f],n),d)},
 a0k(a,b){var s,r,q,p=null,o=this.c
 o.toString
 s=A.aa(o,B.bR,t.w).w.a.a
@@ -76568,7 +76568,7 @@ break}p.aao()
 case 1:return A.a_(q,r)}})
 return A.a0($async$zX,r)},
 aao(){var s,r,q=this
-for(s=B.c9,r=1;r<=19;++r){q.Gh(s,new A.b_M(q,r))
+for(s=B.c9,r=1;r<=18;++r){q.Gh(s,new A.b_M(q,r))
 s=new A.aX(s.a+18e3)}q.Gh(new A.aX(s.a+2e5),q.gawj())},
 awk(){var s,r,q=this
 q.p(new A.b_D(q))
@@ -76651,7 +76651,7 @@ p=p.c
 e=A.aa(a,B.bR,e).w.a.a
 e=e>393?e/393:1
 r.push(A.p(k,new A.xQ(p+o,p+150.2*e,k),-o+1,k,0,0,0,k))}e=l.a
-if(e.f&&l.w<0)r.push(A.bG(0,new A.O4(e.c,-l.w,B.m.Z("Fashion for Algeria",0,l.ay),l.at,k),0,0,0))
+if(e.f&&l.w<0)r.push(A.bG(0,new A.O4(e.c,-l.w,B.m.Z("Style Made for You",0,l.ay),l.at,k),0,0,0))
 e=l.d
 p=l.a.f?l.gaCs():k
 o=A.a([],f)
@@ -76745,7 +76745,7 @@ $S:0}
 A.b_H.prototype={
 $0(){var s=this.a
 s.Q=!1
-s.ay=19},
+s.ay=18},
 $S:0}
 A.b_q.prototype={
 $0(){var s=this.a
@@ -76780,7 +76780,7 @@ $0(){var s=this.a
 s.ch=0
 s.as=s.Q=!1
 s.at=!0
-s.ay=19},
+s.ay=18},
 $S:0}
 A.b_S.prototype={
 $0(){var s=this.a
@@ -84621,7 +84621,7 @@ v(a){var s=null
 return A.c(s,s,B.b,B.bu,s,s,s,6,s,s,s,s,s,s)}}
 A.ars.prototype={
 v(a){var s=null
-return A.c(s,A.n(A.a([B.cPo,B.R,A.e("Fashion for Everyone",s,s,s,s,s,A.ak(s,s,B.aBk,s,s,s,s,s,"Jost",s,s,15.869565217391303,B.aU,s,s,s,1,!0,s,-0.1,s,s,s,s,s,s),s,s)],t.p),B.h,s,B.c,B.e,s),B.b,B.eK,s,s,s,29,s,s,B.aR6,s,s,s)}}
+return A.c(s,A.n(A.a([B.cPo,B.R,A.e("Style Made for You",s,s,s,s,s,A.ak(s,s,B.aBk,s,s,s,s,s,"Jost",s,s,15.869565217391303,B.aU,s,s,s,1,!0,s,-0.1,s,s,s,s,s,s),s,s)],t.p),B.h,s,B.c,B.e,s),B.b,B.eK,s,s,s,29,s,s,B.aR6,s,s,s)}}
 A.NJ.prototype={
 v(a){var s=null,r=this.c,q=new A.aOd(this,a,r)
 return A.c(s,A.fV(new A.aOa(new A.aOb(),r,q,new A.aOc(this,a,q))),B.b,s,s,B.i5,s,43.5,s,s,s,s,s,s)}}
@@ -85068,7 +85068,7 @@ break}p.a6W()
 case 1:return A.a_(q,r)}})
 return A.a0($async$DS,r)},
 a6W(){var s,r,q=this
-for(s=B.c9,r=1;r<=19;++r){q.H8(s,new A.aPz(q,r))
+for(s=B.c9,r=1;r<=18;++r){q.H8(s,new A.aPz(q,r))
 s=new A.aX(s.a+18e3)}q.H8(new A.aX(s.a+2e5),q.gaIH())},
 aII(){var s,r,q=this
 q.p(new A.aPv(q))
@@ -85094,7 +85094,7 @@ $S:0}
 A.aPB.prototype={
 $0(){var s=this.a
 s.uP$=!1
-s.yb$=19},
+s.yb$=18},
 $S:0}
 A.aPC.prototype={
 $0(){var s=this.a
@@ -85129,7 +85129,7 @@ $0(){var s=this.a
 s.JQ$=0
 s.uQ$=s.uP$=!1
 s.V8$=!0
-s.yb$=19},
+s.yb$=18},
 $S:0}
 A.bSv.prototype={
 $3(a,b,c){return B.bSx},
@@ -90695,7 +90695,7 @@ a9g(){var s,r,q=this
 q.p(new A.bJt(q))
 q.r=95
 B.f.gaN(q.CW.f).iR(0)
-for(s=B.jk,r=1;r<=19;++r){q.Fe(s,new A.bJu(q,r))
+for(s=B.jk,r=1;r<=18;++r){q.Fe(s,new A.bJu(q,r))
 s=new A.aX(s.a+14e3)}q.Fe(B.KV,new A.bJv(q))},
 aO0(a){var s,r,q,p,o,n=B.Ai[a]
 if(this.at===0)return n
@@ -90752,7 +90752,7 @@ q=r}f=i.gaIc()
 r=i.f
 p=t.p
 r=A.a([A.p(-14,A.fd(new A.E(B.w,h,B.aJ,B.t,A.a([A.fV(new A.bJz(i)),B.aO5],p),h),B.t,B.cU5),h,h,0,0,-r,h)],p)
-if(i.y&&i.f>0)r.push(A.p(h,A.dI(A.r(A.a([B.G2,B.cr,new A.m(h,14,A.e(B.m.Z("Fashion for Algeria",0,i.as),h,h,h,h,h,A.ak(h,h,B.i.am(0.92),h,h,h,h,h,h,h,h,11.5,h,h,B.y,h,1.2,!0,h,0.1,h,h,h,h,h,h),h,h),h)],p),B.h,h,B.c,B.I),!0,h),h,h,0,0,-44.5,h))
+if(i.y&&i.f>0)r.push(A.p(h,A.dI(A.r(A.a([B.G2,B.cr,new A.m(h,14,A.e(B.m.Z("Style Made for You",0,i.as),h,h,h,h,h,A.ak(h,h,B.i.am(0.92),h,h,h,h,h,h,h,h,11.5,h,h,B.y,h,1.2,!0,h,0.1,h,h,h,h,h,h),h,h),h)],p),B.h,h,B.c,B.I),!0,h),h,h,0,0,-44.5,h))
 o=t.WA
 r.push(A.r(A.a([new A.m(h,g,h,h),new A.m(h,44.5,A.n(A.a([B.a6f,B.aaC,B.R,new A.q(B.b1T,new A.bJA(a),0.45,B.p,h),B.c8T,new A.q(B.O0,new A.bJB(a),0.45,B.p,h),B.a6H],p),B.h,h,B.c,B.e,h),h),B.a6v,new A.m(h,210.7,new A.dy(new A.bJC(i),A.eF(i.ay,new A.bJD(i),11,B.aTG,h,B.J,new A.bJE()),h,o),h),new A.m(h,9.2,new A.br(B.add,h,h,A.bg(A.a5(A.a([A.a5(h,h,h,h,h,h,h,h,h,B.cl7,""+(i.e+1)),A.a5(h,h,h,h,h,h,h,h,h,A.ak(h,h,B.i.am(0.72),h,h,h,h,h,h,h,h,h,h,h,h,h,h,!0,h,h,h,h,h,h,h,h)," / 11")],t.R),h,h,h,h,h,h,h,h,h,h),h,h,h,h,B.cnN,h),h),h),i.aLO()],p),B.h,h,B.c,B.e))
 r=A.a([new A.d4(new A.E(B.w,h,B.u,B.b,r,h),h)],p)
@@ -90827,7 +90827,7 @@ A.bJn.prototype={
 $0(){var s=this.a
 s.x=s.w=s.z=!1
 s.y=!0
-s.as=19},
+s.as=18},
 $S:0}
 A.bJG.prototype={
 $0(){var s,r,q=this.a,p=B.f.gaN(q.CW.f).at
