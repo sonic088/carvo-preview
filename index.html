@@ -22,7 +22,7 @@
 
   <!-- Full-screen like a native app: viewport-fit=cover lets the page draw under the
        iPhone status bar / home indicator; black-translucent keeps the status bar
-       (white clock/battery) on top of our content, as in the SHEIN app. -->
+       (white clock/battery) on top of our content, as in the reference app. -->
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
   <!-- iOS meta tags & icons -->
@@ -36,7 +36,7 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>CARVO</title>
-  <meta name="theme-color" content="#FD7006">
+  <meta name="theme-color" content="#C8007F">
   <link rel="manifest" href="manifest.json">
   <link rel="preload" as="image" href="splash/splash_bg.jpg">
   <link rel="preload" as="image" href="splash/splash_wordmark.png">
@@ -193,13 +193,13 @@
   </script>
 </head>
 <body>
-  <div id="carvo-splash" aria-label="CARVO - Fashion for every you"><div id="carvo-splash-lockup"><img class="wm" src="splash/splash_wordmark.png" alt=""><div id="carvo-splash-tag"><img src="splash/splash_tagline.png" alt=""></div></div></div>
+  <div id="carvo-splash" aria-label="CARVO - Style made for you"><div id="carvo-splash-lockup"><img class="wm" src="splash/splash_wordmark.png" alt=""><div id="carvo-splash-tag"><img src="splash/splash_tagline.png" alt=""></div></div></div>
   <script>
     (function () {
       var el = document.getElementById('carvo-splash');
       // Tagline typing, same as lib/launch_splash.dart (Trends pull-to-refresh timing: a character every 14 ms,
       // no easing, no cursor, prefix centred). t0 = first frame with both images ready, shared with Flutter.
-      var STEP = 14, TX = 37.75, TW = 192.75, EDGES = [4.0, 15.25, 24.0, 34.75, 41.0, 53.0, 64.0, 64.0, 79.5, 91.5, 101.25, 101.25, 116.25, 127.5, 136.0, 146.25, 155.75, 155.75, 171.75, 183.25, 192.75];
+      var STEP = 14, TX = 37.75, TW = 192.75, EDGES = [6.75, 16.5, 27.75, 37.25, 48.25, 48.25, 69.75, 82.25, 94.5, 105.5, 105.5, 123.5, 137.25, 148.25, 148.25, 167.5, 181.0, 192.75];
       var tag = document.getElementById('carvo-splash-tag');
       var imgs = el.getElementsByTagName('img');
       function ready() { for (var i = 0; i < imgs.length; i++) if (!imgs[i].complete) return false; return true; }
