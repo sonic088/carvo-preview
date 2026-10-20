@@ -224,16 +224,6 @@
         el.parentNode && el.parentNode.removeChild(el);
         el = null;
       };
-      // Never hang on the welcome screen: once Flutter has put its view in the page, the HTML copy leaves after
-      // at most 3 s even if the Flutter side never calls carvoSplashDone; and after 15 s it leaves regardless,
-      // so a failed boot shows the page instead of a frozen splash.
-      var started = performance.now();
-      (function watch() {
-        if (!el) return;
-        var t = performance.now() - started;
-        if ((document.querySelector('flutter-view, flt-glass-pane') && t > 3000) || t > 15000) { window.carvoSplashDone(); return; }
-        setTimeout(watch, 250);
-      })();
     })();
   </script>
   <!--
