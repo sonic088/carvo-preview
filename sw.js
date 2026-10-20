@@ -1,5 +1,5 @@
 // CARVO PWA service worker: network-first with cache fallback (offline support).
-const CACHE = 'carvo-v160'; // bump to force clients to drop old caches
+const CACHE = 'carvo-v161'; // bump to force clients to drop old caches
 const CORE = ['./', 'index.html', 'manifest.json', 'flutter_bootstrap.js', 'main.dart.js', 'favicon.png', 'icons/Icon-192.png', 'splash/splash_bg.jpg', 'splash/splash_wordmark.png', 'splash/splash_tagline.png'];
 
 self.addEventListener('install', (event) => {
