@@ -1,6 +1,23 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
+<script>
+/* CARVO test-build error reporter (test folders only) */
+(function(){
+  var box=null, lines=[], t0=performance.now();
+  function show(){ if(!document.body){setTimeout(show,50);return;}
+    if(!box){box=document.createElement('pre');box.id='carvo-err';box.style.cssText='position:fixed;left:0;right:0;bottom:0;max-height:60%;overflow:auto;margin:0;padding:8px;z-index:2147483647;background:rgba(160,0,0,.92);color:#fff;font:11px/1.35 -apple-system,monospace;white-space:pre-wrap;word-break:break-word;pointer-events:auto';box.onclick=function(){box.style.display='none'};document.body.appendChild(box);}
+    box.textContent=lines.join('\n'); }
+  function add(kind,msg,err){ var s='['+((performance.now()-t0)/1000).toFixed(1)+'s] '+kind+': '+msg; if(err&&err.stack) s+='\n'+String(err.stack).split('\n').slice(0,6).join('\n'); lines.push(s); if(kind!=='stage') show(); else if(box) show(); }
+  window.carvoReport=add;
+  add('stage','test-nozellige ua='+navigator.userAgent.slice(0,90)+' standalone='+(navigator.standalone===true)+' dpr='+devicePixelRatio+' webgl2='+(function(){try{return !!document.createElement('canvas').getContext('webgl2')}catch(e){return 'err'}})());
+  window.addEventListener('error',function(e){ if(e.target&&e.target!==window&&(e.target.src||e.target.href)){add('load-fail',(e.target.src||e.target.href));return;} add('error',(e.message||'')+' @'+(e.filename||'')+':'+(e.lineno||''),e.error);},true);
+  window.addEventListener('unhandledrejection',function(e){var r=e.reason; add('rejection',(r&&r.message)||String(r),r);});
+  document.addEventListener('webglcontextlost',function(e){add('webglcontextlost','canvas '+(e.target&&e.target.width)+'x'+(e.target&&e.target.height));},true);
+  var ce=console.error; console.error=function(){try{add('console.error',Array.prototype.map.call(arguments,String).join(' ').slice(0,800));}catch(_){} return ce.apply(console,arguments);};
+  setTimeout(function(){ var v=document.querySelector('flutter-view, flt-glass-pane'); var c=document.querySelectorAll('canvas').length; add('check8s','flutter-view='+(!!v)+' canvases='+c+' splash='+(!!document.getElementById('carvo-splash'))); show(); },8000);
+})();
+</script>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.

@@ -44,10 +44,16 @@ _flutter.buildConfig = {"engineRevision":"692136cb6582dbfc5af3fb33c2515a069f2f66
 // Flutter's built-in service worker is deprecated; CARVO uses its own sw.js (registered in index.html).
 // On the iPhone home-screen app, index.html hands us a host element sized to the real screen (WebKit's layout
 // viewport is short there); everywhere else carvoHostElement() returns null and Flutter takes the full page.
+window.carvoReport && carvoReport('stage','bootstrap: loader.load');
 _flutter.loader.load({
   onEntrypointLoaded: async function (engineInitializer) {
-    var host = window.carvoHostElement ? window.carvoHostElement() : null;
-    var appRunner = await engineInitializer.initializeEngine(host ? { hostElement: host } : {});
-    await appRunner.runApp();
+    try {
+      window.carvoReport && carvoReport('stage','entrypoint loaded (main.dart.js)');
+      var host = window.carvoHostElement ? window.carvoHostElement() : null;
+      var appRunner = await engineInitializer.initializeEngine(Object.assign(host ? { hostElement: host } : {}));
+      window.carvoReport && carvoReport('stage','engine initialized');
+      await appRunner.runApp();
+      window.carvoReport && carvoReport('stage','runApp returned');
+    } catch (e) { window.carvoReport ? carvoReport('boot-exception', (e && e.message) || String(e), e) : null; throw e; }
   },
 });
