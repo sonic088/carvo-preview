@@ -6,7 +6,7 @@
     "background_color": "#C8007F",
     "theme_color": "#C8007F",
     "description": "CARVO - Style made for you",
-    "orientation": "portrait-primary",
+    "orientation": "portrait",
     "prefer_related_applications": false,
     "icons": [
         {
