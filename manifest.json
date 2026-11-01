@@ -3,10 +3,10 @@
     "short_name": "CARVO",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#C8007F",
-    "theme_color": "#C8007F",
-    "description": "CARVO - Style made for you",
-    "orientation": "portrait",
+    "background_color": "#FD7006",
+    "theme_color": "#FD7006",
+    "description": "CARVO - Fashion for everyone",
+    "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
         {
