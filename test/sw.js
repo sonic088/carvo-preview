@@ -1,5 +1,5 @@
 // CARVO PWA service worker: network-first with cache fallback (offline support).
-const CACHE = 'carvo-v179'; // bump to force clients to drop old caches
+const CACHE = 'carvo-v180'; // bump to force clients to drop old caches
 const CORE = ['./', 'index.html', 'manifest.json', 'flutter_bootstrap.js', 'main.dart.js', 'favicon.png', 'icons/Icon-192.png', 'splash/splash_bg.jpg', 'splash/splash_wordmark.png', 'splash/splash_tagline.png'];
 
 self.addEventListener('install', (event) => {
@@ -10,7 +10,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim())
+      // no clients.claim(): taking over a page mid-load made its in-flight fetches (assets/FontManifest.json) fail
+      // on a first visit -> white screen. The new worker controls the next load instead.
   );
 });
 
