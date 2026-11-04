@@ -1,5 +1,5 @@
 // CARVO PWA service worker: network-first with cache fallback (offline support).
-const CACHE = 'carvo-v187'; // bump to force clients to drop old caches
+const CACHE = 'carvo-v188'; // bump to force clients to drop old caches
 const CORE = ['./', 'index.html', 'manifest.json', 'flutter_bootstrap.js', 'main.dart.js', 'favicon.png', 'icons/Icon-192.png', 'splash/splash_bg.jpg', 'splash/splash_wordmark.png', 'splash/splash_tagline.png'];
 
 const IMG = 'carvo-img-v1', IMG_MAX = 400; // ~400 WebP renditions (~15-70 KB each) <= ~20 MB
