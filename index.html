@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
+  <!-- warm the photo + API hosts before Flutter asks for them (first images / first scroll come sooner) -->
+  <link rel="preconnect" href="https://carvo-img.abdeslam-gh17.workers.dev">
+  <link rel="preconnect" href="https://carvo-products.abdeslam-gh17.workers.dev" crossorigin>
+  <link rel="dns-prefetch" href="https://img.alicdn.com">
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
