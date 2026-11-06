@@ -118,3 +118,21 @@ label.f{display:block;font-size:12px;font-weight:600;margin:0 0 4px}.fg{margin-b
   .picker-col:last-child{border-bottom:0;max-height:320px}
   .picker-sticky{position:static}
 }
+
+/* Leaf attributes — captured SHEIN groups */
+.attr-box{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.attr-group{border:1px solid var(--ln);border-radius:10px;padding:10px 12px;background:#fafafa}
+.attr-group.invalid{border-color:#f3c4bf;background:#fff8f7}
+.attr-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.attr-head .f{margin:0}
+.attr-req{color:var(--red);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.attr-count{margin-left:auto;font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums}
+.attr-q{margin:0 0 8px;padding:7px 10px}
+.attr-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:200px;overflow:auto}
+.attr-chip{border:1px solid var(--ln);background:#fff;border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--ink)}
+.attr-chip:hover{border-color:#c9cdd2}
+.attr-chip.on{background:var(--soft);border-color:#9dcebb;color:var(--g);font-weight:600}
+.attr-miss{background:var(--ambs);border:1px solid #f3e0b5;border-radius:10px;padding:10px 12px;margin:8px 0 12px}
+.attr-miss p{margin:0 0 6px;font-size:13px;color:#7a4b08}.attr-miss p:last-child{margin:0}
+.attr-saved{margin:12px 0}
+#attr-req-check{display:contents}

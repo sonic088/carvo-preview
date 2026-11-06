@@ -19,12 +19,6 @@
     return low ? t + ' · ' + low + ' faible' : String(t);
   };
 
-  const ATTRS = {
-    "Robes d'été": { 'Longueur de manches': ['Sans manches', 'Manches courtes', 'Manches longues'], Longueur: ['Mini', 'Midi', 'Maxi'], Matière: ['Coton', 'Viscose', 'Lin', 'Satin'], Coupe: ['Regular', 'Slim', 'Oversize'], Occasion: ['Quotidien', 'Soirée', 'Mariage'], Motif: ['Uni', 'Fleuri', 'Rayé'] },
-    default: { Matière: ['Coton', 'Viscose', 'Cuir', 'Similicuir'], Motif: ['Uni', 'Imprimé'] }
-  };
-
-
   const SUGGEST_IDS = [
     { id: 'CAT-SH12478', pct: 92 },
     { id: 'CAT-SH12476', pct: 46 },
@@ -83,6 +77,129 @@
       .catch(() => { CAT.error = true; if (route() === 'ajouter') render(); });
   }
 
+  const ATTR = { ready: false, error: false, dict: [], leaves: {} };
+
+  function loadLeafAttrs() {
+    if (ATTR._once) return;
+    ATTR._once = true;
+    fetch('data/leaf-attrs.json?v=1')
+      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then((data) => {
+        ATTR.dict = data.dict || [];
+        ATTR.leaves = data.leaves || {};
+        ATTR.ready = true;
+        ATTR.error = false;
+        if (route() === 'ajouter') render();
+      })
+      .catch(() => { ATTR.error = true; if (route() === 'ajouter') render(); });
+  }
+
+  function leafAttrs(id) {
+    if (!id || !ATTR.ready) return null;
+    const raw = ATTR.leaves[id];
+    if (!raw) return null;
+    return {
+      en: raw.en,
+      status: raw.status || 'ready',
+      no_color: !!raw.no_color,
+      notes: raw.notes || [],
+      fields: (raw.fields || []).map((f) => ({
+        key: f.key,
+        required: !!f.required,
+        multiple: f.multiple !== false,
+        values: (f.values || []).map((i) => ATTR.dict[i])
+      }))
+    };
+  }
+
+  function selectedOf(key) {
+    const v = S.add.attrs[key];
+    if (Array.isArray(v)) return v;
+    if (v == null || v === '') return [];
+    return [String(v)];
+  }
+
+  function missingRequiredAttrs() {
+    const leaf = leafAttrs(S.add.leafId);
+    if (!leaf) return [];
+    return leaf.fields.filter((f) => f.required && !selectedOf(f.key).length).map((f) => f.key);
+  }
+
+  function attrNoteBox(leaf) {
+    const notes = [];
+    if (!leaf) {
+      notes.push('Aucun attribut capturé pour cette feuille. Aucune valeur n’est inventée.');
+    } else {
+      if (!leaf.fields.length) {
+        notes.push('Aucun attribut capturé pour cette feuille (page source vide, exclue, ou filtres prix seulement). Aucune valeur n’est inventée.');
+      }
+      if (leaf.no_color) notes.push('Pas de groupe Color pour cette feuille — aucune couleur n’est ajoutée.');
+      if (leaf.status === 'excluded') notes.push('Feuille exclue de la source — les champs restent tels quels, rien n’est inventé.');
+      if (leaf.status === 'missing') notes.push('Capture manquante pour cette feuille — aucune valeur n’est proposée.');
+      (leaf.notes || []).forEach((n) => notes.push(n));
+    }
+    if (!notes.length) return '';
+    return `<div class="attr-miss">${notes.map((n) => `<p>${esc(n)}</p>`).join('')}</div>`;
+  }
+
+  function attrsHtml(leafId) {
+    if (ATTR.error) return `<div class="attr-miss"><p>Impossible de charger les attributs de cette feuille.</p></div>`;
+    if (!ATTR.ready) return `<p class="mu">Chargement des attributs capturés…</p>`;
+    const leaf = leafAttrs(leafId);
+    const noteHtml = attrNoteBox(leaf);
+    if (!leaf || !leaf.fields.length) return noteHtml;
+    const groups = leaf.fields.map((f) => {
+      const sel = selectedOf(f.key);
+      const search = f.values.length >= 10
+        ? `<input type="search" class="attr-q" data-attr-q="${esc(f.key)}" placeholder="Filtrer ${esc(f.key)}…" autocomplete="off" />`
+        : '';
+      const chips = f.values.map((val) => {
+        const on = sel.includes(val);
+        return `<button type="button" class="attr-chip${on ? ' on' : ''}" data-attr-toggle="${esc(f.key)}" data-val="${esc(val)}">${esc(val)}</button>`;
+      }).join('');
+      return `<div class="attr-group${f.required && !sel.length ? ' invalid' : ''}" data-attr-group="${esc(f.key)}">
+        <div class="attr-head">
+          <label class="f">${esc(f.key)}</label>
+          ${f.required ? '<span class="attr-req">obligatoire</span>' : ''}
+          ${f.multiple ? '' : '<span class="mu">un seul choix</span>'}
+          <span class="attr-count">${sel.length} / ${f.values.length}</span>
+        </div>
+        ${search}
+        <div class="attr-chips">${chips}</div>
+      </div>`;
+    }).join('');
+    return `${noteHtml}<div class="attr-box">${groups}</div>`;
+  }
+
+  function attrsPreviewLine(leafId) {
+    if (ATTR.error) return 'Attributs : fichier introuvable';
+    if (!ATTR.ready) return 'Attributs : chargement…';
+    const leaf = leafAttrs(leafId);
+    if (!leaf || !leaf.fields.length) return 'Aucun attribut capturé — aucune valeur inventée';
+    return 'Attributs (' + leaf.fields.length + ') : ' + leaf.fields.map((f) => f.key).join(', ');
+  }
+
+  function formatSavedAttrs(attrs) {
+    const entries = Object.entries(attrs || {}).filter(([, v]) => Array.isArray(v) ? v.length : (v != null && v !== ''));
+    if (!entries.length) return '';
+    return `<div class="attr-saved">${entries.map(([k, v]) => {
+      const vals = Array.isArray(v) ? v : [v];
+      return `<div class="fg"><label class="f">${esc(k)}</label><div>${vals.map((x) => `<span class="chip">${esc(x)}</span>`).join(' ')}</div></div>`;
+    }).join('')}</div>`;
+  }
+
+  function refreshAttrCheck() {
+    const box = document.getElementById('attr-req-check');
+    if (!box) return;
+    const leaf = leafAttrs(S.add.leafId);
+    if (!leaf) { box.innerHTML = ''; return; }
+    const req = leaf.fields.filter((f) => f.required);
+    box.innerHTML = req.map((f) => {
+      const n = selectedOf(f.key).length;
+      return `<li style="color:${n ? 'var(--a)' : 'var(--red)'}">● ${esc(f.key)} · ${n} choisi(s)</li>`;
+    }).join('');
+  }
+
   function addPathLabel(a) {
     if (a.path && a.path.length) return a.path.join(' › ');
     return a.leafEn || '';
@@ -115,6 +232,7 @@
     S.add.path = [];
     S.add.leafQ = '';
     S.add.expanded = {};
+    S.add.attrs = {};
   }
 
   function selectCat(id) {
@@ -130,6 +248,7 @@
     S.add.leafAr = '';
     S.add.path = [];
     S.add.leafQ = '';
+    S.add.attrs = {};
     if ((node.children || []).some((c) => !c.isLeaf)) S.add.expanded[id] = true;
   }
 
@@ -147,6 +266,7 @@
     S.add.treeQ = '';
     S.add.leafQ = '';
     S.add._focus = null;
+    S.add.attrs = {};
     return true;
   }
 
@@ -390,7 +510,7 @@
       ${a.leafId ? `<div class="card" style="background:var(--ambs);border-color:#f3e0b5;margin-top:12px">
         <b>Cette feuille exige</b>
         <ul class="check">
-          <li>• Attributs (liste) : ${Object.keys(ATTRS[a.leafEn] || ATTRS.default).join(', ')}</li>
+          <li>• ${esc(attrsPreviewLine(a.leafId))}</li>
           <li>• Photos 3:4 par couleur · guide des tailles en cm</li>
           <li>• Stock réel par SKU — vide = inconnu, jamais 0 inventé</li>
         </ul>
@@ -672,7 +792,7 @@
         <button class="btn p" data-to-details ${a.leafId?'':'disabled'}>Continuer → Détails & variantes</button>
       </div>`;
 
-    const dict = ATTRS[a.leafEn] || ATTRS.default;
+    const leaf = leafAttrs(a.leafId);
     const skuRows = a.colors.map((c) => `<tr><td><span class="thumb" style="width:18px;height:18px;background:${c.hex};margin:0 6px 0 0"></span>${esc(c.name)}</td>${a.sizes.map((sz) => {
       const k = c.name+'|'+sz; const v = a.stocks[k];
       return `<td><input class="mini" type="number" min="0" placeholder="?" data-sku="${esc(k)}" value="${v==null||v===''?'':esc(v)}" /></td>`;
@@ -689,7 +809,8 @@
           </div>
           <div class="card" style="margin-bottom:12px">
             <h3>Attributs de la feuille « ${esc(a.leafEn || '')} »</h3>
-            <div class="row">${Object.entries(dict).map(([k,opts]) => `<div class="fg" style="min-width:160px;flex:1"><label class="f">${esc(k)}</label><select data-attr="${esc(k)}"><option value="">— choisir —</option>${opts.map((o)=>`<option ${a.attrs[k]===o?'selected':''}>${esc(o)}</option>`).join('')}</select></div>`).join('')}</div>
+            <p class="mu">Tous les groupes capturés pour cette feuille, sans renommer ni inventer de valeurs. Color et Size sont obligatoires lorsqu’ils existent.</p>
+            ${attrsHtml(a.leafId)}
           </div>
           <div class="card" style="margin-bottom:12px">
             <h3>Photos par couleur · ratio 3:4</h3>
@@ -732,6 +853,10 @@
             <ul class="check">
               <li style="color:var(--a)">● Feuille choisie · ${esc(a.leafEn || '')}</li>
               <li style="color:${a.title.trim().length>=5?'var(--a)':'var(--red)'}">● Titre · ${a.title.trim().length} / 5 car. min</li>
+              <span id="attr-req-check">${(leaf ? leaf.fields.filter((f) => f.required) : []).map((f) => {
+                const n = selectedOf(f.key).length;
+                return `<li style="color:${n ? 'var(--a)' : 'var(--red)'}">● ${esc(f.key)} · ${n} choisi(s)</li>`;
+              }).join('')}</span>
               <li>● Photos · ${sum(a.colors,c=>c.photos)} placées (placeholders 3:4)</li>
               <li>● SKU · ${a.colors.length} × ${a.sizes.length} = ${a.colors.length*a.sizes.length}</li>
             </ul>
@@ -913,6 +1038,7 @@
         <div class="fg grow"><label class="f">Prix de vente (DA)</label><input type="number" data-ft="price" value="${p.price}" /></div>
         <div class="fg grow"><label class="f">Source</label><input value="${esc(p.source)}" readonly /></div>
       </div>
+      ${formatSavedAttrs(p.attrs)}
       <p class="mu">Les données brutes 1688 ne sortent jamais de l’ERP. Seule la fiche validée part vers l’application.</p>`;
     if (S.ficheTab==='couleurs') body = `
       <p class="mu">Photos 3:4 par couleur. Cliquez un emplacement pour le remplir (démo).</p>
@@ -991,6 +1117,7 @@
         inp.addEventListener('input', () => { S.pQ = inp.value; render(); const n=$('#pq'); if(n){ n.focus(); n.setSelectionRange(S.pQ.length,S.pQ.length);} });
       }
     }
+    if (r === 'ajouter') loadLeafAttrs();
     if (r === 'ajouter' && S.addStep === 1) bindTreePicker();
   }
 
@@ -1008,6 +1135,7 @@
       <p>${chipP(p.status)} · ${esc(p.leaf)} · ${da(p.price)}</p>
       ${p.refuse?`<p style="color:var(--red)">${esc(p.refuse)}</p>`:''}
       <p class="mu">${esc(p.titleAr||'')}</p>
+      ${formatSavedAttrs(p.attrs)}
       <h3>SKU & stock réel</h3>
       <div class="tw"><table>
         <thead><tr><th>Couleur</th><th>Taille</th><th>Stock</th></tr></thead>
@@ -1028,7 +1156,7 @@
   }
 
   function onClick(e) {
-    const b = e.target.closest('[data-act],[data-pf],[data-of],[data-open-prod],[data-open-order],[data-sel-order],[data-confirm],[data-call],[data-cancel],[data-expand],[data-dept],[data-cat],[data-leaf],[data-pick-leaf],[data-to-details],[data-back-leaf],[data-save-draft],[data-submit-add],[data-add-color],[data-add-size],[data-photo],[data-fphoto],[data-ftab],[data-send-ctrl],[data-to-fiche],[data-fix],[data-jump-filter],[data-stock],[data-import],[data-reveal],[data-close-drawer],[data-save-shop],.burger,.scrim,.langs button,.drawer');
+    const b = e.target.closest('[data-act],[data-pf],[data-of],[data-open-prod],[data-open-order],[data-sel-order],[data-confirm],[data-call],[data-cancel],[data-expand],[data-dept],[data-cat],[data-leaf],[data-pick-leaf],[data-to-details],[data-back-leaf],[data-save-draft],[data-submit-add],[data-add-color],[data-add-size],[data-photo],[data-fphoto],[data-ftab],[data-send-ctrl],[data-to-fiche],[data-fix],[data-jump-filter],[data-stock],[data-import],[data-reveal],[data-close-drawer],[data-save-shop],[data-attr-toggle],.burger,.scrim,.langs button,.drawer');
     if (!b) return;
 
     if (b.classList.contains('burger')) { $('#side').classList.add('on'); $('#scrim').classList.add('on'); return; }
@@ -1113,14 +1241,45 @@
       S.addStep = 2; render(); return;
     }
     if (b.hasAttribute('data-back-leaf')) { S.addStep = 1; render(); return; }
+    if (b.hasAttribute('data-attr-toggle')) {
+      const key = b.getAttribute('data-attr-toggle');
+      const val = b.getAttribute('data-val');
+      const info = leafAttrs(S.add.leafId);
+      const field = info && info.fields.find((f) => f.key === key);
+      const multiple = !field || field.multiple !== false;
+      const cur = selectedOf(key);
+      const next = multiple
+        ? (cur.includes(val) ? cur.filter((x) => x !== val) : cur.concat([val]))
+        : (cur.includes(val) ? [] : [val]);
+      S.add.attrs[key] = next;
+      const group = b.closest('.attr-group');
+      if (group) {
+        group.querySelectorAll('.attr-chip').forEach((el) => {
+          const on = next.includes(el.getAttribute('data-val'));
+          el.classList.toggle('on', on);
+        });
+        const count = group.querySelector('.attr-count');
+        if (count) count.textContent = next.length + ' / ' + ((field && field.values.length) || group.querySelectorAll('.attr-chip').length);
+        group.classList.toggle('invalid', !!(field && field.required && !next.length));
+      }
+      refreshAttrCheck();
+      return;
+    }
     if (b.hasAttribute('data-save-draft')) {
       if (!S.add.leafId) return toast('Impossible d’enregistrer : aucune feuille choisie.', true);
+      if (!ATTR.ready) return toast('Les attributs de la feuille sont encore en cours de chargement.', true);
+      const miss = missingRequiredAttrs();
+      if (miss.length) return toast(miss.map((k) => '« ' + k + ' »').join(', ') + (miss.length > 1 ? ' sont obligatoires' : ' est obligatoire') + ' pour cette feuille.', true);
       pushDraft(false);
       return;
     }
     if (b.hasAttribute('data-submit-add')) {
       if (!S.add.leafId) return toast('Feuille obligatoire.', true);
+      grabAddFields();
       if ((S.add.title||'').trim().length < 5) { $('#add-title') && $('#add-title').classList.add('invalid'); return toast('Le titre FR doit faire au moins 5 caractères.', true); }
+      if (!ATTR.ready) return toast('Les attributs de la feuille sont encore en cours de chargement.', true);
+      const miss = missingRequiredAttrs();
+      if (miss.length) return toast(miss.map((k) => '« ' + k + ' »').join(', ') + (miss.length > 1 ? ' sont obligatoires' : ' est obligatoire') + ' pour cette feuille.', true);
       pushDraft(true); return;
     }
     if (b.hasAttribute('data-add-color')) {
@@ -1180,6 +1339,7 @@
       source: 'formulaire',
       color: a.colors[0].hex,
       colors: a.colors.map((c)=>({...c})),
+      attrs: JSON.parse(JSON.stringify(a.attrs || {})),
       skus
     };
     S.products.unshift(p);
@@ -1204,6 +1364,16 @@
     if (el.id === 'add-title' || el.id === 'add-titleAr' || el.id === 'add-desc' || el.id === 'add-price') grabAddFields();
     if (el.hasAttribute('data-sku')) S.add.stocks[el.getAttribute('data-sku')] = el.value;
     if (el.hasAttribute('data-attr')) S.add.attrs[el.getAttribute('data-attr')] = el.value;
+    if (el.hasAttribute('data-attr-q')) {
+      const q = el.value.trim().toLowerCase();
+      const box = el.closest('.attr-group');
+      if (box) {
+        box.querySelectorAll('.attr-chip').forEach((chip) => {
+          const hay = (chip.getAttribute('data-val') || '').toLowerCase();
+          chip.hidden = !!(q && !hay.includes(q));
+        });
+      }
+    }
     if (el.hasAttribute('data-dstock')) {
       const [id, i] = el.getAttribute('data-dstock').split(':');
       const p = S.products.find((x)=>x.id===id);
