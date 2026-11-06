@@ -4,7 +4,7 @@
 
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
-  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&'+'amp;','<':'&'+'lt;','>':'&'+'gt;','"':'&'+'quot;',"'":'&'+'#39;'}[c]));
   const da = (n) => (n == null || n === '' ? '—' : Number(n).toLocaleString('fr-FR') + ' DA');
   const sum = (a, fn) => a.reduce((s, x) => s + (fn ? fn(x) : x), 0);
   const stockOf = (p) => {
