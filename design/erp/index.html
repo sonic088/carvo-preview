@@ -3,167 +3,33 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CARVO — Seller ERP</title>
+<title>CARVO — Seller ERP (app interactive)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap" rel="stylesheet" />
-<style>
-  :root {
-    --green: #0b3d2e;
-    --green-action: #0f6b4c;
-    --green-soft: #e8f2ed;
-    --amber: #b45309;
-    --bg: #f4f5f3;
-    --card: #ffffff;
-    --ink: #111827;
-    --muted: #6b7280;
-    --line: #e5e7eb;
-    --rail: 260px;
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: var(--bg); color: var(--ink);
-    display: grid; grid-template-columns: var(--rail) 1fr; min-height: 100%;
-  }
-  aside {
-    background: var(--green); color: #fff;
-    padding: 20px 14px 24px;
-    display: flex; flex-direction: column; gap: 8px;
-    position: sticky; top: 0; height: 100vh; overflow: auto;
-  }
-  .brand {
-    padding: 8px 10px 18px; border-bottom: 1px solid rgba(255,255,255,.12);
-    margin-bottom: 8px;
-  }
-  .brand .eyebrow { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
-  .brand h1 { margin: 6px 0 0; font-size: 18px; font-weight: 650; }
-  .brand p { margin: 6px 0 0; font-size: 12px; opacity: .85; line-height: 1.4; }
-  .group-label {
-    font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
-    opacity: .65; padding: 12px 10px 4px;
-  }
-  nav a {
-    display: block; text-decoration: none; color: rgba(255,255,255,.92);
-    padding: 10px 12px; border-radius: 10px; font-size: 13.5px; font-weight: 500;
-  }
-  nav a:hover { background: rgba(255,255,255,.08); }
-  nav a.active { background: #fff; color: var(--green); font-weight: 650; }
-  .aside-foot {
-    margin-top: auto; padding: 14px 10px 4px; font-size: 11px; opacity: .7; line-height: 1.4;
-  }
-  .aside-foot a { color: #fff; }
-  main {
-    padding: 20px 24px 32px; overflow: auto; min-width: 0;
-  }
-  .top {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
-    margin-bottom: 14px; flex-wrap: wrap;
-  }
-  .top h2 { margin: 0; font-size: 22px; color: var(--green); font-weight: 650; }
-  .top .meta { color: var(--muted); font-size: 13px; }
-  .decision {
-    background: var(--card); border: 1px solid var(--line); border-radius: 12px;
-    padding: 12px 14px; font-size: 13.5px; color: var(--muted); margin-bottom: 14px;
-    max-width: 90ch;
-  }
-  .stage {
-    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
-    overflow: hidden; box-shadow: 0 1px 2px rgba(16,24,40,.04);
-  }
-  .stage img {
-    width: 100%; height: auto; display: block; background: #eceeea;
-  }
-  .stage .bar {
-    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
-    padding: 10px 14px; border-top: 1px solid var(--line); font-size: 12.5px;
-  }
-  .stage .bar a { color: var(--green-action); font-weight: 600; text-decoration: none; }
-  .stage .bar a:hover { text-decoration: underline; }
-  @media (max-width: 860px) {
-    body { grid-template-columns: 1fr; }
-    aside { position: relative; height: auto; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="app.css?v=1" />
 </head>
 <body>
-<aside>
-  <div class="brand">
-    <div class="eyebrow">CARVO · design</div>
-    <h1>Seller ERP</h1>
-    <p>Application design seule — vert profond, Inter, cartes blanches. Données d’exemple.</p>
-  </div>
-  <div class="group-label">Seller Center</div>
-  <nav id="nav-seller"></nav>
-  <div class="group-label">ERP vendeur</div>
-  <nav id="nav-erp"></nav>
-  <div class="aside-foot">
-    App CARVO :
-    <a href="https://sonic088.github.io/carvo-preview/test/" target="_blank" rel="noopener">test/</a><br/>
-    Dossier :
-    <a href="../dossier/">design/dossier</a>
-  </div>
-</aside>
-<main>
-  <div class="top">
-    <h2 id="title">…</h2>
-    <div class="meta" id="kicker"></div>
-  </div>
-  <div class="decision" id="decision"></div>
-  <div class="stage">
-    <img id="shot" alt="" />
-    <div class="bar">
-      <a id="jpg" href="#">JPG</a>
-      <a id="png" href="#">PNG master</a>
-      <a id="open" href="#" target="_blank" rel="noopener">Ouvrir plein écran</a>
+<div class="shell">
+  <aside id="side">
+    <div class="logo"><span class="mark">C</span><div><b>CARVO</b><small>Seller Center</small></div></div>
+    <div class="shop">Boutique Lina<small>Vendeur de confiance · id 0042</small></div>
+    <nav id="nav"></nav>
+    <div class="side-foot">
+      <div class="langs"><button class="on">FR</button><button>AR</button><button>EN</button></div>
+      <a href="../dossier/">Dossier de conception</a>
+      <a href="https://sonic088.github.io/carvo-preview/test/" target="_blank" rel="noopener">App CARVO ↗</a>
+      <small>Démo · données d'exemple</small>
     </div>
-  </div>
-</main>
-<script>
-const screens = [
-  {id:'dash', g:'seller', file:'seller-dash', title:'Tableau de bord', decision:'Commandes à confirmer, produits refusés, prochain reversement. Stock faible = stock réel.'},
-  {id:'produits', g:'seller', file:'seller-produits', title:'Produits', decision:'Catalogue + validation CARVO + stock par SKU + refus avec motif.'},
-  {id:'feuille', g:'seller', file:'seller-ajouter-feuille', title:'Ajouter · Feuille', decision:'Choisir la feuille (rayon › catégorie › feuille). Jamais un parent.'},
-  {id:'details', g:'seller', file:'seller-ajouter-details', title:'Ajouter · Détails', decision:'Attributs liste, photos 3:4, SKU stock réel (vide=inconnu), guide cm.'},
-  {id:'commandes', g:'seller', file:'seller-commandes', title:'Commandes COD', decision:'Une commande part seulement après confirmation téléphonique CARVO.'},
-  {id:'paiements', g:'seller', file:'seller-paiements', title:'Paiements', decision:'COD transporteur, relevés hebdo, commission 8 %, référence virement.'},
-  {id:'parametres', g:'seller', file:'seller-parametres', title:'Paramètres', decision:'Portes Excel/formulaire/API/moteur 1688 accordées par CARVO.'},
-  {id:'fiche', g:'erp', file:'erp-fiche-produit', title:'Fiche produit ERP', decision:'Feuille, infos, couleurs/photos drag-drop, SKU/stock, guide, aperçu app, contrôle avant envoi. Données brutes 1688 ne sortent jamais de l’ERP.'},
-];
-
-function renderNav() {
-  for (const s of screens) {
-    const a = document.createElement('a');
-    a.href = '#' + s.id;
-    a.dataset.id = s.id;
-    a.textContent = s.title;
-    document.getElementById(s.g === 'erp' ? 'nav-erp' : 'nav-seller').appendChild(a);
-  }
-}
-
-function show(id) {
-  const s = screens.find(x => x.id === id) || screens[0];
-  location.hash = s.id;
-  document.getElementById('title').textContent = s.title;
-  document.getElementById('kicker').textContent = s.g === 'erp' ? 'ERP vendeur n°1' : 'Seller Center';
-  document.getElementById('decision').textContent = s.decision;
-  const jpg = 'screens/' + s.g + '/' + s.file + '.jpg';
-  const png = 'png/' + s.g + '/' + s.file + '.png';
-  const img = document.getElementById('shot');
-  img.src = jpg;
-  img.alt = s.title;
-  document.getElementById('jpg').href = jpg;
-  document.getElementById('png').href = png;
-  document.getElementById('open').href = png;
-  document.querySelectorAll('aside nav a').forEach(a => {
-    a.classList.toggle('active', a.dataset.id === s.id);
-  });
-}
-
-renderNav();
-window.addEventListener('hashchange', () => show(location.hash.slice(1)));
-show(location.hash.slice(1) || 'dash');
-</script>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <main>
+    <header class="topbar"><button class="burger" id="burger" aria-label="Menu">☰</button><span id="crumb"></span><span class="demo">DÉMO</span></header>
+    <div id="view"></div>
+  </main>
+</div>
+<div class="drawer" id="drawer"><div class="drawer-in" id="drawerIn"></div></div>
+<div class="toasts" id="toasts"></div>
+<script src="app.js?v=1"></script>
 </body>
 </html>
