@@ -645,6 +645,165 @@
     if (isMcp()) renderMcpPage();
   }
 
+
+  /* Live catalog reads (products API). Never publish. Seller POST /seller/v1/products is not live — local queue only. */
+  var PRODUCTS_API = 'https://carvo-products.abdeslam-gh17.workers.dev';
+  var FORBIDDEN_WRITE = ['/import/publish', 'import.publish', 'auto.publish', 'POST /import/publish'];
+
+  function titleOf(item, lang) {
+    var t = item && item.title;
+    if (!t) return '';
+    if (typeof t === 'string') return t;
+    return t.fr || t.en || t.ar || '';
+  }
+  function titleArOf(item) {
+    var t = item && item.title;
+    if (!t || typeof t === 'string') return '';
+    return t.ar || '';
+  }
+  function badgesOf(item) {
+    var out = [];
+    var b = item && item.card_badges;
+    if (!b) return out;
+    if (b.cod) out.push('COD');
+    if (b.bar === 'hot_pick' || b.hot_top) out.push(b.top_seller_rank ? ('HOT #' + b.top_seller_rank) : 'HOT');
+    if (b.chip === 'trends' || item.trends) out.push(b.chip_text ? ('Trends ' + b.chip_text) : 'Trends');
+    if (item.discount_pct) out.push('-' + item.discount_pct + '%');
+    return out.slice(0, 3);
+  }
+  function mapCard(item) {
+    var colors = (item.colors || []).map(function (c) {
+      return {
+        name: c.name || c.value || (c.name_i18n && (c.name_i18n.fr || c.name_i18n.en)) || '—',
+        hex: c.hex || '#dddddd',
+        photos: (c.image || (item.images && item.images.length)) ? 1 : 0
+      };
+    });
+    if (!colors.length && item.images && item.images.length) {
+      colors = [{ name: '—', hex: '#dddddd', photos: Math.min(3, item.images.length) }];
+    }
+    var hex = (colors[0] && colors[0].hex) || '#dddddd';
+    return {
+      id: String(item.id),
+      code: item.code || null,
+      title: titleOf(item),
+      titleAr: titleArOf(item),
+      leaf: item.category || '',
+      leafId: item.category || null,
+      price: item.price_da != null ? Number(item.price_da) : 0,
+      status: 'en_ligne',
+      badges: badgesOf(item),
+      source: item.store_name || item.store || 'catalogue',
+      color: hex,
+      colors: colors,
+      skus: [],
+      refuse: null,
+      local: false,
+      published: true,
+      submitted: true,
+      live: true,
+      detailLoaded: false
+    };
+  }
+  function mapDetailOnto(p, detail) {
+    if (!p || !detail) return p;
+    var colors = (detail.colors || []).map(function (c) {
+      var imgs = 0;
+      if (c.image) imgs = 1;
+      return {
+        name: c.name || c.value || (c.name_i18n && (c.name_i18n.fr || c.name_i18n.en)) || '—',
+        hex: c.hex || '#dddddd',
+        photos: imgs
+      };
+    });
+    if (colors.length) {
+      p.colors = colors;
+      p.color = colors[0].hex || p.color;
+    }
+    p.skus = (detail.skus || []).map(function (s) {
+      return {
+        c: s.color || s.color_value || '—',
+        s: s.size || s.size_value || '—',
+        stock: s.stock == null ? null : Number(s.stock)
+      };
+    });
+    if (detail.size_chart) p.sizeChart = detail.size_chart;
+    if (detail.path) p.leaf = Array.isArray(detail.path) ? detail.path.join(' › ') : String(detail.path);
+    else if (detail.category) p.leaf = detail.category;
+    p.title = titleOf(detail) || p.title;
+    p.titleAr = titleArOf(detail) || p.titleAr;
+    if (detail.price_da != null) p.price = Number(detail.price_da);
+    p.badges = badgesOf(detail);
+    p.detailLoaded = true;
+    return p;
+  }
+  function assertNoPublish(url) {
+    var u = String(url || '');
+    for (var i = 0; i < FORBIDDEN_WRITE.length; i++) {
+      if (u.indexOf(FORBIDDEN_WRITE[i]) !== -1) throw new Error('forbidden_publish_path');
+    }
+  }
+  async function fetchJson(url) {
+    assertNoPublish(url);
+    if (/\/import\/publish/i.test(url)) throw new Error('forbidden_publish_path');
+    var r = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
+    if (!r.ok) throw new Error('http_' + r.status);
+    return r.json();
+  }
+  async function loadCatalogPages(maxPages) {
+    var items = [];
+    var cursor = '0';
+    var pages = 0;
+    var limit = 40;
+    maxPages = maxPages || 5;
+    while (pages < maxPages) {
+      var url = PRODUCTS_API + '/v1/products?offset=' + encodeURIComponent(cursor) + '&limit=' + limit;
+      var data = await fetchJson(url);
+      var batch = (data && data.items) || [];
+      for (var i = 0; i < batch.length; i++) items.push(mapCard(batch[i]));
+      pages += 1;
+      if (!data || !data.next_cursor || !batch.length) break;
+      cursor = String(data.next_cursor);
+    }
+    return { items: items, pages: pages, api: PRODUCTS_API };
+  }
+  async function reloadCatalog() {
+    var data = window.CARVO_SELLER_DATA;
+    if (!data || typeof data.setCatalog !== 'function') return null;
+    try {
+      var res = await loadCatalogPages(5);
+      data.setCatalog(res.items, {
+        source: 'carvo-products',
+        api: PRODUCTS_API,
+        count: res.items.length,
+        pages: res.pages,
+        sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
+      });
+      return res;
+    } catch (e) {
+      data.setCatalog([], { source: 'carvo-products', error: String(e && e.message || e), api: PRODUCTS_API });
+      return null;
+    }
+  }
+  async function ensureDetail(id) {
+    var data = window.CARVO_SELLER_DATA;
+    if (!data || !data.getProducts) return null;
+    var list = data.getProducts();
+    var p = null;
+    for (var i = 0; i < list.length; i++) {
+      if (String(list[i].id) === String(id)) { p = list[i]; break; }
+    }
+    if (!p || p.local || p.detailLoaded) return p;
+    var detail = await fetchJson(PRODUCTS_API + '/v1/products/' + encodeURIComponent(id));
+    mapDetailOnto(p, detail);
+    return p;
+  }
+  window.CARVO_SELLER_CATALOG = {
+    apiBase: PRODUCTS_API,
+    reload: reloadCatalog,
+    ensureDetail: ensureDetail
+  };
+
   function boot() {
     var view = document.getElementById('view');
     var nav = document.getElementById('nav');
@@ -661,6 +820,7 @@
     }
     window.addEventListener('hashchange', function () { setTimeout(sync, 0); });
     setTimeout(sync, 0);
+    setTimeout(function () { reloadCatalog(); }, 0);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
