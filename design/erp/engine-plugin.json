@@ -2,30 +2,110 @@
   "name": "carvo-import-engine",
   "protocol": "2024-11-05",
   "transport": "in-page JSON-RPC (design/erp/mcp-plugin.js)",
-  "policy": { "voices": 2, "min_confidence": 0.8, "below_threshold": "keep_review", "invents_leaf": false, "invents_values": false, "publishes": false },
-  "tool_forbidden": ["import.publish", "auto.publish", "POST /import/publish", "import_publish", "publish", "import_start", "import_secrets", "daigou-token", "daigou-login", "engines_health"],
+  "policy": {
+    "voices": 2,
+    "min_confidence": 0.8,
+    "below_threshold": "keep_review",
+    "invents_leaf": false,
+    "invents_values": false,
+    "publishes": false
+  },
+  "tool_forbidden": [
+    "import.publish",
+    "auto.publish",
+    "POST /import/publish",
+    "import_publish",
+    "publish",
+    "import_start",
+    "import_secrets",
+    "daigou-token",
+    "daigou-login",
+    "engines_health"
+  ],
   "tools": {
-    "import_placement": { "output": "suggestions[{id, confidence}] + policy" },
-    "read_measurements": { "input": { "leaf_id": "optional" }, "output": "required leaf fields" },
-    "import_status": { "output": { "independent": true, "starts_import": false, "publishes": false } },
+    "import_placement": {
+      "output": "packet leaf only; [] when no packet (no demo suggestions)"
+    },
+    "read_measurements": {
+      "input": {
+        "leaf_id": "optional"
+      },
+      "output": "required leaf fields"
+    },
+    "import_status": {
+      "output": {
+        "independent": true,
+        "starts_import": false,
+        "publishes": false
+      }
+    },
     "arrange_product": {
       "input": {
         "packet": {
-          "leaf_id": "CAT-… (leaf only, must exist in data/leaf-attrs.json)",
+          "leaf_id": "CAT-… required; no packet = no action (reason no_engine_packet); no demo fallback",
           "confidence": "0..1; default 1 when leaf_id is explicit",
           "keep_review": "bool; true = do nothing",
-          "titles": { "fr": "→ #add-title (fallback en)", "en": "", "ar": "→ #add-titleAr" },
-          "descriptions": { "fr": "→ #add-desc (fallback en, ar)" },
+          "titles": {
+            "fr": "→ #add-title (fallback en)",
+            "en": "",
+            "ar": "→ #add-titleAr"
+          },
+          "descriptions": {
+            "fr": "→ #add-desc (fallback en, ar)"
+          },
           "price": "DA, only if present → #add-price; no FX/margin computed",
-          "attributes": { "<leaf field key>": "value or [values]; kept only if in leaf list; single-choice with >1 match is skipped" },
-          "skus": [{ "color": "", "size": "", "stock": "integer; empty/99/999/9999 = unknown (left empty)" }],
-          "size_chart": { "unit": "cm", "rows": [{ "size": "M", "chest": 90, "waist": [68, 84], "hip": 96, "length": 113 }] }
+          "attributes": {
+            "<leaf field key>": "value or [values]; kept only if in leaf list; single-choice with >1 match is skipped"
+          },
+          "skus": [
+            {
+              "color": "",
+              "size": "",
+              "stock": "integer; empty/99/999/9999 = unknown (left empty)"
+            }
+          ],
+          "size_chart": {
+            "unit": "cm",
+            "rows": [
+              {
+                "size": "M",
+                "chest": 90,
+                "waist": [
+                  68,
+                  84
+                ],
+                "hip": 96,
+                "length": 113
+              }
+            ]
+          },
+          "colors": "[name|{name,hex}] → SKU rows via window.CARVO_SELLER_ADD.setVariants (no prompt)",
+          "sizes": "[size]; also taken from skus and size_chart rows"
         }
       },
-      "size_guide_mapping": { "chest": "Poitrine", "waist": "Taille", "hip": "Hanches", "length|skirt_length|pants_length": "Longueur" },
-      "size_guide_rule": "demo cells are cleared; only numeric cells from the packet are written; others stay empty (unknown)",
+      "size_guide_mapping": {
+        "chest": "Poitrine",
+        "waist": "Taille",
+        "hip": "Hanches",
+        "length|skirt_length|pants_length": "Longueur"
+      },
+      "size_guide_rule": "inputs [data-guide=\"<size>|chest|waist|hip|length\"]; start empty; only packet numbers written; saved on submit as product.sizeChart {unit:'cm',rows}",
       "submit_rule": "clicks [data-submit-add] (Soumettre à la validation → en_controle) only when leaf chosen, confidence >= 0.8, title >= 5 chars and no required field left",
-      "output": { "ok": "bool", "action": "arranged|keep_review", "leaf_id": "", "confidence": 0, "texts_filled": [], "attrs_filled": [], "attrs_skipped_ambiguous": [], "required_left": [], "skus": {}, "size_guide": {}, "submitted": "bool", "status": "en_controle|null", "published": false }
+      "output": {
+        "ok": "bool",
+        "action": "arranged|keep_review",
+        "leaf_id": "",
+        "confidence": 0,
+        "texts_filled": [],
+        "attrs_filled": [],
+        "attrs_skipped_ambiguous": [],
+        "required_left": [],
+        "skus": {},
+        "size_guide": {},
+        "submitted": "bool",
+        "status": "en_controle|null",
+        "published": false
+      }
     }
   }
 }
