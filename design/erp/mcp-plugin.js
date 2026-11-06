@@ -19,125 +19,77 @@
     engines_health: 1
   };
   var TOOLS = [
-    {
-      name: 'import_placement',
-      description: 'ai_place: two voices, min_confidence 0.8, else keep_review. invents_leaf false.'
-    },
-    {
-      name: 'read_measurements',
-      description: 'Read real leaf attribute groups. Does not invent values or fill the size guide.'
-    },
-    {
-      name: 'arrange_product',
-      description: 'Drive Seller ERP Ajouter using a suggested leaf at or above 0.8.'
-    },
-    {
-      name: 'import_status',
-      description: 'Read-only reminder that import stays on the independent engine (D-034).'
-    }
+    { name: 'import_placement', description: 'Place a product (ai_place, min_confidence 0.8).' },
+    { name: 'read_measurements', description: 'Read required leaf fields only.' },
+    { name: 'arrange_product', description: 'Open the suggested leaf in Ajouter.' },
+    { name: 'import_status', description: 'Independent engine status.' }
   ];
 
   var I18N = {
     fr: {
       mcp: 'MCP Connect',
-      intro: 'Le moteur d’import reste indépendant : import 1688, lecture des mesures, méthode D-034. L’ERP a une case plugin. Une fois branché, l’IA du moteur range les produits et pilote l’écran vendeur — sans secrets de plateforme et sans publication automatique.',
-      engineTitle: 'Moteur indépendant',
-      engineP1: 'Rien n’est réécrit dans le moteur. L’import 1688 reste sur sa porte existante (D-034). Les mesures viennent des attributs réels de chaque feuille SHEIN, pas de valeurs inventées.',
-      engineP2: 'Seuil de placement : deux voix, confiance minimale 0,8. En dessous, le produit reste en revue. Aucune feuille n’est inventée.',
-      slotTitle: 'Case plugin · MCP Connect',
+      crumb: 'Seller Center · MCP Connect',
       pluginName: 'Moteur d’import CARVO',
-      protocol: 'Protocole MCP 2024-11-05',
-      connected: 'Branché',
-      disconnected: 'Non branché',
-      connect: 'Brancher le plugin',
-      disconnect: 'Détacher',
-      toolsTitle: 'L’IA pilote le Seller ERP',
-      arrange: 'Ranger le produit',
-      measure: 'Lire les mesures',
-      place: 'Règles de placement',
-      importSt: 'État de l’import',
-      arrangeHint: 'Ouvre Ajouter, choisit la feuille au-dessus de 0,8, puis les détails. Les champs de mesures restent vides.',
-      noInvent: 'Aucune valeur de mesure n’est écrite. Le plugin ne fait que lire les choix capturés.',
-      importHint: 'L’import reste dans le moteur indépendant. Ce plugin ne lance pas d’import et ne publie pas.',
-      forbidden: 'Pas de jeton Daigou, pas de secrets, pas de publish dans cette case.',
-      log: 'Journal MCP',
-      needConnect: 'Branche d’abord le plugin.',
-      keepReview: 'Confiance sous 0,8 — le produit reste en revue.',
-      arranged: 'Le moteur a ouvert la feuille proposée dans Ajouter.',
-      measured: 'Mesures lues depuis les groupes réels de la feuille.',
-      noLeaf: 'Aucune feuille choisie. Range d’abord un produit, ou ouvre une feuille dans Ajouter.',
-      toastOk: 'Plugin branché. L’IA peut ranger les produits dans le Seller ERP.',
-      toastOff: 'Plugin détaché. Le moteur reste indépendant.',
-      crumb: 'Seller Center · MCP Connect'
+      connected: 'Connecté',
+      disconnected: 'Déconnecté',
+      connect: 'Connecter',
+      disconnect: 'Retirer',
+      arrange: 'Ranger',
+      measure: 'Mesures',
+      needConnect: 'Connectez le plugin.',
+      keepReview: 'Revue requise.',
+      arranged: 'Produit rangé.',
+      measured: 'Mesures lues.',
+      noLeaf: 'Aucune feuille sélectionnée.',
+      toastOk: 'Connecté.',
+      toastOff: 'Retiré.',
+      required: 'Champs requis',
+      emptyReq: 'Aucun champ requis.'
     },
     ar: {
       mcp: 'ربط MCP',
-      intro: 'المحرك يبقى مستقل: استيراد 1688 وقراءة المقاسات وطريقة D-034. في الـ ERP كاين خانة إضافة. ملي تربط الإضافة، الذكاء الاصطناعي ديال المحرك كيرتب المنتجات وكيسوق شاشة البائع — بلا أسرار المنصة وبلا نشر تلقائي.',
-      engineTitle: 'المحرك المستقل',
-      engineP1: 'ما بدّلناش المحرك. استيراد 1688 يبقى في بابه الموجود (D-034). المقاسات كتجي من صفات الورقة الحقيقية، ما كايناش قيم مخترعة.',
-      engineP2: 'الترتيب: صوتان، عتبة الثقة 0.8. تحت العتبة المنتوج كيبقى في المراجعة. ما كايناش ورقة مخترعة.',
-      slotTitle: 'خانة الإضافة · MCP Connect',
+      crumb: 'Seller Center · ربط MCP',
       pluginName: 'محرك الاستيراد CARVO',
-      protocol: 'بروتوكول MCP 2024-11-05',
       connected: 'مربوط',
       disconnected: 'غير مربوط',
-      connect: 'ربط الإضافة',
+      connect: 'ربط',
       disconnect: 'فصل',
-      toolsTitle: 'الذكاء الاصطناعي كيسوق Seller ERP',
-      arrange: 'رتّب المنتوج',
-      measure: 'اقرأ المقاسات',
-      place: 'قواعد الترتيب',
-      importSt: 'حالة الاستيراد',
-      arrangeHint: 'كيمشي لـ Ajouter وكيدير الورقة فوق 0.8، من بعد التفاصيل. خانات المقاسات كيبقاو فارغين.',
-      noInvent: 'ما كيتكتبو والو في المقاسات. الإضافة كتقرا غير الاختيارات المصوّرة.',
-      importHint: 'الاستيراد يبقى في المحرك المستقل. هاد الإضافة ما كتشغّلش الزحف وما كتنشرش.',
-      forbidden: 'ما كاينش توكن Daigou، ما كاينش أسرار، ما كاينش نشر في هاد الخانة.',
-      log: 'سجل MCP',
-      needConnect: 'ربط الإضافة أولاً.',
-      keepReview: 'الثقة تحت 0.8 — المنتوج كيبقى في المراجعة.',
-      arranged: 'المحرك حل الورقة المقترحة في Ajouter.',
-      measured: 'تقراو المقاسات من مجموعات الورقة الحقيقية.',
-      noLeaf: 'ما كايناش ورقة مختارة. رتّب منتوج أولاً، أولا حل ورقة في Ajouter.',
-      toastOk: 'الإضافة تربطات. الذكاء الاصطناعي يقدر يرتب المنتجات في Seller ERP.',
-      toastOff: 'الإضافة تفصلات. المحرك يبقى مستقل.',
-      crumb: 'Seller Center · ربط MCP'
+      arrange: 'ترتيب',
+      measure: 'المقاسات',
+      needConnect: 'اربط الإضافة أولاً.',
+      keepReview: 'يحتاج مراجعة.',
+      arranged: 'تم ترتيب المنتوج.',
+      measured: 'تمّت قراءة المقاسات اللازمة.',
+      noLeaf: 'ما كايناش ورقة مختارة.',
+      toastOk: 'تم الربط.',
+      toastOff: 'تم الفصل.',
+      required: 'الحقول اللازمة',
+      emptyReq: 'ما كايناش حقول لازمة.'
     },
     en: {
       mcp: 'MCP Connect',
-      intro: 'The import engine stays independent: 1688 import, reading measurements, D-034. The ERP has a plugin slot. Once plugged in, the engine’s AI arranges products and drives the seller screens — without platform secrets and without auto-publish.',
-      engineTitle: 'Independent engine',
-      engineP1: 'The engine is not rewritten. 1688 import stays on its existing door (D-034). Measurements come from each leaf’s real attributes, never invented values.',
-      engineP2: 'Placement: two voices, minimum confidence 0.8. Below that the product stays in review. No leaf is invented.',
-      slotTitle: 'Plugin slot · MCP Connect',
+      crumb: 'Seller Center · MCP Connect',
       pluginName: 'CARVO import engine',
-      protocol: 'MCP protocol 2024-11-05',
       connected: 'Connected',
-      disconnected: 'Not connected',
-      connect: 'Connect plugin',
+      disconnected: 'Disconnected',
+      connect: 'Connect',
       disconnect: 'Disconnect',
-      toolsTitle: 'AI drives Seller ERP',
-      arrange: 'Arrange product',
-      measure: 'Read measurements',
-      place: 'Placement rules',
-      importSt: 'Import status',
-      arrangeHint: 'Opens Ajouter, picks the leaf at or above 0.8, then details. Measurement fields stay empty.',
-      noInvent: 'No measurement values are written. The plugin only reads captured choices.',
-      importHint: 'Import stays on the independent engine. This plugin does not start a crawl and does not publish.',
-      forbidden: 'No Daigou token, no secrets, and no publish in this slot.',
-      log: 'MCP log',
+      arrange: 'Arrange',
+      measure: 'Measurements',
       needConnect: 'Connect the plugin first.',
-      keepReview: 'Confidence below 0.8 — the product stays in review.',
-      arranged: 'The engine opened the suggested leaf in Ajouter.',
-      measured: 'Measurements read from the leaf’s real groups.',
-      noLeaf: 'No leaf selected. Arrange a product first, or open a leaf in Ajouter.',
-      toastOk: 'Plugin connected. AI can arrange products in Seller ERP.',
-      toastOff: 'Plugin detached. The engine stays independent.',
-      crumb: 'Seller Center · MCP Connect'
+      keepReview: 'Review required.',
+      arranged: 'Product arranged.',
+      measured: 'Required measurements read.',
+      noLeaf: 'No leaf selected.',
+      toastOk: 'Connected.',
+      toastOff: 'Disconnected.',
+      required: 'Required fields',
+      emptyReq: 'No required fields.'
     }
   };
 
   var attrCache = null;
-  var logLines = [];
+  var lastRead = null;
 
   function lang() {
     var l = document.documentElement.lang || 'fr';
@@ -170,11 +122,7 @@
     el.className = 'toast';
     el.textContent = msg;
     host.appendChild(el);
-    setTimeout(function () { el.remove(); }, 4200);
-  }
-  function addLog(line) {
-    logLines.unshift(new Date().toISOString() + '  ' + line);
-    if (logLines.length > 40) logLines.pop();
+    setTimeout(function () { el.remove(); }, 3200);
   }
   function wait(ms) {
     return new Promise(function (resolve) { setTimeout(resolve, ms); });
@@ -208,18 +156,14 @@
         capabilities: { tools: {} }
       });
     }
-    if (method === 'notifications/initialized') {
-      return null;
-    }
-    if (method === 'tools/list') {
-      return rpcResult(id, { tools: TOOLS });
-    }
+    if (method === 'notifications/initialized') return null;
+    if (method === 'tools/list') return rpcResult(id, { tools: TOOLS });
     if (method === 'tools/call') {
       var name = req.params && req.params.name;
       var args = (req.params && req.params.arguments) || {};
       var out = await callTool(name, args);
       return rpcResult(id, {
-        content: [{ type: 'text', text: JSON.stringify(out, null, 2) }]
+        content: [{ type: 'text', text: JSON.stringify(out) }]
       });
     }
     return rpcError(id, -32601, 'Method not found');
@@ -233,29 +177,6 @@
     return attrCache;
   }
 
-  function decodeLeaf(data, id) {
-    var rec = data && data.leaves && data.leaves[id];
-    if (!rec) return null;
-    var dict = data.dict || [];
-    return {
-      id: id,
-      en: rec.en,
-      status: rec.status || 'ready',
-      notes: rec.notes || [],
-      no_color: !!rec.no_color,
-      fields: (rec.fields || []).map(function (f) {
-        return {
-          key: f.key,
-          required: !!f.required,
-          multiple: f.multiple !== false,
-          values: (f.values || []).map(function (i) {
-            return typeof i === 'number' ? (dict[i] != null ? dict[i] : String(i)) : String(i);
-          })
-        };
-      })
-    };
-  }
-
   function detectLeafFromDom() {
     var selected = document.querySelector('[data-leaf].on, [data-pick-leaf].on, [aria-current="true"][data-leaf]');
     if (selected) {
@@ -264,49 +185,40 @@
     return null;
   }
 
+  function requiredOnly(data, id) {
+    var rec = data && data.leaves && data.leaves[id];
+    if (!rec) return null;
+    var fields = (rec.fields || []).filter(function (f) { return !!f.required; });
+    return {
+      ok: true,
+      leaf_id: id,
+      name: rec.en || id,
+      required: fields.map(function (f) { return f.key; })
+    };
+  }
+
   async function callTool(name, args) {
-    if (FORBIDDEN[name]) {
-      return { ok: false, error: 'tool_forbidden', name: name };
-    }
+    if (FORBIDDEN[name]) return { ok: false, error: 'tool_forbidden', name: name };
     if (name === 'import_placement') {
       return {
         ok: true,
-        policy: {
-          voices: 2,
-          min_confidence: MIN_CONF,
-          below_threshold: 'keep_review',
-          invents_leaf: false
-        },
+        policy: { voices: 2, min_confidence: MIN_CONF, below_threshold: 'keep_review', invents_leaf: false },
         suggestions: SUGGEST
       };
     }
     if (name === 'import_status') {
-      return {
-        ok: true,
-        independent: true,
-        method: 'D-034',
-        starts_import: false,
-        publishes: false,
-        note: 'Import remains on the independent engine. This Seller ERP plugin does not crawl 1688 or publish.'
-      };
+      return { ok: true, independent: true, starts_import: false, publishes: false };
     }
     if (name === 'read_measurements') {
       var id = (args && args.leaf_id) || loadState().lastLeaf || detectLeafFromDom();
       if (!id) return { ok: false, error: 'no_leaf' };
       var data = await loadAttrs();
-      var leaf = decodeLeaf(data, id);
+      var leaf = requiredOnly(data, id);
       if (!leaf) return { ok: false, error: 'unknown_leaf', leaf_id: id };
-      return {
-        ok: true,
-        leaf_id: id,
-        invents_values: false,
-        fills_size_guide: false,
-        leaf: leaf
-      };
+      lastRead = leaf;
+      return leaf;
     }
-    if (name === 'arrange_product') {
-      return arrangeProduct(args && args.leaf_id);
-    }
+    if (name === 'arrange_product') return arrangeProduct(args && args.leaf_id);
     return { ok: false, error: 'unknown_tool', name: name };
   }
 
@@ -324,13 +236,7 @@
       }
     }
     if (!pick || pick.confidence < MIN_CONF) {
-      return {
-        ok: false,
-        action: 'keep_review',
-        reason: 'below_min_confidence',
-        min_confidence: MIN_CONF,
-        suggestions: SUGGEST
-      };
+      return { ok: false, action: 'keep_review', reason: 'below_min_confidence', min_confidence: MIN_CONF };
     }
     location.hash = '#/ajouter';
     try {
@@ -347,27 +253,16 @@
     var st = loadState();
     st.lastLeaf = pick.id;
     saveState(st);
-    return {
-      ok: true,
-      action: 'opened_details',
-      leaf_id: pick.id,
-      confidence: pick.confidence,
-      invents_leaf: false,
-      filled_measurements: false
-    };
+    return { ok: true, action: 'opened_details', leaf_id: pick.id, confidence: pick.confidence };
   }
 
   async function connectPlugin() {
-    var init = await handleRpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} });
-    var listed = await handleRpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
-    var names = ((listed.result && listed.result.tools) || []).map(function (x) { return x.name; });
+    await handleRpc({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} });
+    await handleRpc({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     var st = loadState();
     st.connected = true;
     st.connectedAt = new Date().toISOString();
-    st.protocol = init.result && init.result.protocolVersion;
-    st.tools = names;
     saveState(st);
-    addLog('initialize ' + st.protocol + ' · tools ' + names.join(', '));
     toast(t('toastOk'));
   }
 
@@ -375,7 +270,7 @@
     var st = loadState();
     st.connected = false;
     saveState(st);
-    addLog('disconnect');
+    lastRead = null;
     toast(t('toastOff'));
   }
 
@@ -383,7 +278,6 @@
     var st = loadState();
     if (!st.connected) {
       toast(t('needConnect'));
-      addLog('blocked ' + name + ' (not connected)');
       return;
     }
     var res = await handleRpc({
@@ -393,23 +287,34 @@
       params: { name: name, arguments: {} }
     });
     var parsed = null;
-    try {
-      parsed = JSON.parse(res.result.content[0].text);
-    } catch (e) {
-      parsed = res;
-    }
-    addLog(name + ' → ' + JSON.stringify(parsed));
+    try { parsed = JSON.parse(res.result.content[0].text); }
+    catch (e) { parsed = res; }
     if (name === 'arrange_product') {
       if (parsed && parsed.action === 'keep_review') toast(t('keepReview'));
       else if (parsed && parsed.ok) toast(t('arranged'));
-      else toast((parsed && parsed.error) || name);
       return;
     }
     if (name === 'read_measurements') {
-      if (parsed && parsed.ok) toast(t('measured'));
-      else toast(t('noLeaf'));
+      toast(parsed && parsed.ok ? t('measured') : t('noLeaf'));
+      if (isMcp()) renderMcpPage();
     }
-    if (isMcp()) renderMcpPage();
+  }
+
+  function readHtml() {
+    if (!lastRead || !lastRead.ok) return '';
+    var keys = lastRead.required || [];
+    var items = keys.length
+      ? keys.map(function (k) { return '<li>' + esc(k) + '</li>'; }).join('')
+      : '<li>' + esc(t('emptyReq')) + '</li>';
+    return (
+      '<article class="card">' +
+        '<div class="hd">' + esc(lastRead.name) + '</div>' +
+        '<div class="mcp-read">' +
+          '<h4>' + esc(t('required')) + '</h4>' +
+          '<ul>' + items + '</ul>' +
+        '</div>' +
+      '</article>'
+    );
   }
 
   function pageHtml() {
@@ -418,50 +323,27 @@
     var tools = '';
     if (on) {
       tools =
-        '<article class="card">' +
-          '<div class="hd">' + esc(t('toolsTitle')) + '</div>' +
-          '<p class="mcp-note">' + esc(t('arrangeHint')) + ' ' + esc(t('noInvent')) + '</p>' +
-          '<div class="mcp-tools">' +
-            '<button type="button" class="ok" data-mcp-act="arrange_product">' + esc(t('arrange')) + '</button>' +
-            '<button type="button" data-mcp-act="read_measurements">' + esc(t('measure')) + '</button>' +
-            '<button type="button" class="ghost" data-mcp-act="import_placement">' + esc(t('place')) + '</button>' +
-            '<button type="button" class="ghost" data-mcp-act="import_status">' + esc(t('importSt')) + '</button>' +
-          '</div>' +
-          '<p class="mcp-note">' + esc(t('importHint')) + '</p>' +
-          '<div class="hd">' + esc(t('log')) + '</div>' +
-          '<pre class="mcp-log">' + esc(logLines.join('\n') || '—') + '</pre>' +
-        '</article>';
+        '<div class="mcp-tools">' +
+          '<button type="button" class="ok" data-mcp-act="arrange_product">' + esc(t('arrange')) + '</button>' +
+          '<button type="button" data-mcp-act="read_measurements">' + esc(t('measure')) + '</button>' +
+        '</div>';
     }
     return (
       '<section data-mcp-page class="mcp-wrap">' +
-        '<p class="mcp-intro">' + esc(t('intro')) + '</p>' +
-        '<div class="mcp-cols">' +
-          '<article class="card">' +
-            '<div class="hd">' + esc(t('engineTitle')) + '</div>' +
-            '<div class="mcp-body">' +
-              '<p>' + esc(t('engineP1')) + '</p>' +
-              '<p>' + esc(t('engineP2')) + '</p>' +
+        '<article class="card">' +
+          '<div class="mcp-plugin' + (on ? ' is-on' : '') + '">' +
+            '<h3>' + esc(t('pluginName')) +
+              '<span class="mcp-status">' + esc(on ? t('connected') : t('disconnected')) + '</span>' +
+            '</h3>' +
+            '<div class="mcp-actions">' +
+              (on
+                ? '<button type="button" class="ghost" data-mcp-act="disconnect">' + esc(t('disconnect')) + '</button>'
+                : '<button type="button" class="ok" data-mcp-act="connect">' + esc(t('connect')) + '</button>') +
             '</div>' +
-          '</article>' +
-          '<article class="card">' +
-            '<div class="hd">' + esc(t('slotTitle')) + '</div>' +
-            '<div class="mcp-body">' +
-              '<div class="mcp-plugin' + (on ? ' is-on' : '') + '">' +
-                '<div class="mcp-kicker">' + esc(t('protocol')) + '</div>' +
-                '<h3>' + esc(t('pluginName')) +
-                  '<span class="mcp-status">' + esc(on ? t('connected') : t('disconnected')) + '</span>' +
-                '</h3>' +
-                '<p>' + esc(t('forbidden')) + '</p>' +
-                '<div class="mcp-actions">' +
-                  (on
-                    ? '<button type="button" class="ghost" data-mcp-act="disconnect">' + esc(t('disconnect')) + '</button>'
-                    : '<button type="button" class="ok" data-mcp-act="connect">' + esc(t('connect')) + '</button>') +
-                '</div>' +
-              '</div>' +
-            '</div>' +
-          '</article>' +
-        '</div>' +
-        tools +
+            tools +
+          '</div>' +
+        '</article>' +
+        (on ? readHtml() : '') +
       '</section>'
     );
   }
@@ -510,9 +392,8 @@
     var links = nav.querySelectorAll('a');
     var i;
     for (i = 0; i < links.length; i++) links[i].classList.remove('on');
-    if (isMcp()) {
-      a.classList.add('on');
-    } else {
+    if (isMcp()) a.classList.add('on');
+    else {
       var r = location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] || 'dash';
       var cur = nav.querySelector('a[href="#/' + r + '"]');
       if (cur) cur.classList.add('on');
