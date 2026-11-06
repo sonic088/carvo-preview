@@ -3,11 +3,6 @@
 
   var STORE = 'carvo.sellerErp.mcp.v1';
   var PROTOCOL = '2024-11-05';
-  var SUGGEST = [
-    { id: 'CAT-SH12478', confidence: 0.92 },
-    { id: 'CAT-SH12476', confidence: 0.46 },
-    { id: 'CAT-SH1727', confidence: 0.38 }
-  ];
   var MIN_CONF = 0.8;
   var FORBIDDEN = {
     import_publish: 1,
@@ -227,7 +222,7 @@
       return {
         ok: true,
         policy: { voices: 2, min_confidence: MIN_CONF, below_threshold: 'keep_review', invents_leaf: false },
-        suggestions: SUGGEST
+        suggestions: (function () { var pk = (args && args.packet) || loadState().packet; return pk && pk.leaf_id ? [{ id: pk.leaf_id, confidence: pk.confidence == null ? 1 : pk.confidence }] : []; })()
       };
     }
     if (name === 'import_status') {
@@ -247,22 +242,6 @@
       return arrangeProduct(pk);
     }
     return { ok: false, error: 'unknown_tool', name: name };
-  }
-
-  async function pickSuggested(wantedId) {
-    var pick = null;
-    var i;
-    if (wantedId) {
-      for (i = 0; i < SUGGEST.length; i++) {
-        if (SUGGEST[i].id === wantedId) pick = SUGGEST[i];
-      }
-      if (!pick) pick = { id: wantedId, confidence: 1 };
-    } else {
-      for (i = 0; i < SUGGEST.length; i++) {
-        if (SUGGEST[i].confidence >= MIN_CONF) { pick = SUGGEST[i]; break; }
-      }
-    }
-    return pick;
   }
 
   async function openAjouterPicker() {
@@ -298,39 +277,6 @@
     await wait(220);
   }
 
-  async function fillKnownArrangement(id) {
-    var filled = [];
-    var left = [];
-    var data = await loadAttrs();
-    var rec = leafRecord(data, id);
-    var title = document.getElementById('add-title');
-    if (title && rec && rec.name && !title.value.trim()) {
-      title.value = rec.name;
-      title.dispatchEvent(new Event('input', { bubbles: true }));
-      title.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    try {
-      await waitFor(function () {
-        return document.querySelector('[data-attr-toggle], [data-save-draft]');
-      }, 8000);
-    } catch (e) {}
-    var fields = (rec && rec.required) || [];
-    var i, f, chip;
-    for (i = 0; i < fields.length; i++) {
-      f = fields[i];
-      if (f.values.length === 1) {
-        chip = document.querySelector('[data-attr-toggle="' + cssAttr(f.key) + '"][data-val="' + cssAttr(f.values[0]) + '"]');
-        if (chip && !chip.classList.contains('on')) chip.click();
-        if (chip) filled.push(f.key);
-        else left.push(f.key);
-      } else {
-        left.push(f.key);
-      }
-    }
-    return { title: rec ? rec.name : id, filled: filled, left: left };
-  }
-
-  var GUIDE_COLS = { chest: 1, waist: 2, hip: 3, length: 4, skirt_length: 4, pants_length: 4 };
   var FAKE_STOCK = { 99: 1, 999: 1, 9999: 1 };
 
   function setVal(el, v) {
@@ -395,7 +341,11 @@
   }
 
   function fillAttrs(fields, pk) {
-    var src = pk.attributes || pk.attrs || {};
+    var src = {};
+    var given = pk.attributes || pk.attrs || {};
+    Object.keys(given).forEach(function (k) { src[k] = given[k]; });
+    if (src.Color == null) { var pc = packetColors(pk).map(function (c) { return c.name; }); if (pc.length) src.Color = pc; }
+    if (src.Size == null) { var ps = packetSizes(pk); if (ps.length) src.Size = ps; }
     var filled = [], skipped = [], left = [];
     fields.forEach(function (f) {
       var want = src[f.key];
@@ -414,50 +364,48 @@
     return { filled: filled, skipped: skipped, left: left };
   }
 
-  function guideTable() {
-    var cards = document.querySelectorAll('.card');
-    for (var i = 0; i < cards.length; i++) {
-      var h = cards[i].querySelector('h3');
-      if (h && /Guide des tailles/i.test(h.textContent)) return cards[i].querySelector('tbody');
-    }
-    return null;
-  }
+  var GUIDE_KEY = { chest: 'chest', waist: 'waist', hip: 'hip', length: 'length', skirt_length: 'length', pants_length: 'length' };
 
   function fillGuide(chart) {
-    var body = guideTable();
     var res = { filled_cells: 0, sizes_missing_in_ui: [], keys_not_in_ui: [] };
-    if (!body) { res.error = 'guide_not_found'; return res; }
-    var rows = {};
-    Array.prototype.forEach.call(body.querySelectorAll('tr'), function (tr) {
-      var td = tr.querySelector('td');
-      if (td) rows[td.textContent.trim().toUpperCase()] = tr.querySelectorAll('input');
-    });
-    // Demo centimetres are not source data: clear every cell, then write packet numbers only.
-    Object.keys(rows).forEach(function (k) {
-      Array.prototype.forEach.call(rows[k], function (inp) { setVal(inp, ''); inp.placeholder = '?'; });
-    });
-    if (!chart || !Array.isArray(chart.rows) || (chart.unit && chart.unit !== 'cm')) {
-      if (chart && chart.unit && chart.unit !== 'cm') res.error = 'unit_not_cm';
-      return res;
-    }
-    var lenKey = ['length', 'skirt_length', 'pants_length'];
+    if (!chart || !Array.isArray(chart.rows)) return res;
+    if (chart.unit && chart.unit !== 'cm') { res.error = 'unit_not_cm'; return res; }
     chart.rows.forEach(function (r) {
-      var size = String(r.size || '').trim().toUpperCase();
-      var inputs = rows[size];
-      if (!inputs) { if (size) res.sizes_missing_in_ui.push(size); return; }
+      var size = String(r.size || '').trim();
+      if (!size) return;
+      if (!document.querySelector('[data-guide^="' + cssAttr(size + '|') + '"]')) { res.sizes_missing_in_ui.push(size); return; }
       var usedLen = false;
       Object.keys(r).forEach(function (k) {
         if (k === 'size') return;
         var base = k.replace(/_range$/, '');
-        var col = GUIDE_COLS[base];
+        var col = GUIDE_KEY[base];
         if (!col) { if (res.keys_not_in_ui.indexOf(base) < 0) res.keys_not_in_ui.push(base); return; }
-        if (lenKey.indexOf(base) >= 0) { if (usedLen) return; usedLen = true; }
+        if (col === 'length') { if (usedLen) return; usedLen = true; }
         var txt = cellText(r[k]);
-        var inp = inputs[col - 1];
+        var inp = document.querySelector('[data-guide="' + cssAttr(size + '|' + col) + '"]');
         if (txt != null && inp) { setVal(inp, txt); res.filled_cells++; }
       });
     });
     return res;
+  }
+
+  function packetSizes(pk) {
+    var out = [];
+    function add(v) { v = String(v == null ? '' : v).trim(); if (v && out.indexOf(v) < 0) out.push(v); }
+    (pk.sizes || []).forEach(add);
+    (pk.skus || []).forEach(function (s) { add(s.size); });
+    ((pk.size_chart && pk.size_chart.rows) || []).forEach(function (r) { add(r.size); });
+    return out;
+  }
+  function packetColors(pk) {
+    var out = [], seen = {};
+    function add(c) {
+      var name = String((c && c.name) || c || '').trim();
+      if (name && !seen[name]) { seen[name] = 1; out.push({ name: name, hex: (c && c.hex) || '' }); }
+    }
+    (pk.colors || []).forEach(add);
+    (pk.skus || []).forEach(function (s) { add(s.color); });
+    return out;
   }
 
   function fillSkus(pk) {
@@ -474,17 +422,14 @@
   }
 
   async function arrangeProduct(pk) {
-    pk = pk || {};
+    if (!pk || !pk.leaf_id) {
+      return { ok: false, action: 'keep_review', reason: 'no_engine_packet', submitted: false, published: false };
+    }
     if (pk.keep_review || pk.action === 'keep_review') {
       return { ok: false, action: 'keep_review', reason: 'packet_keep_review', submitted: false, published: false };
     }
-    var pick;
-    if (pk.leaf_id) {
-      var c = pk.confidence == null ? 1 : Number(pk.confidence);
-      pick = { id: String(pk.leaf_id), confidence: isFinite(c) ? c : 0 };
-    } else {
-      pick = await pickSuggested(null);
-    }
+    var c = pk.confidence == null ? 1 : Number(pk.confidence);
+    var pick = { id: String(pk.leaf_id), confidence: isFinite(c) ? c : 0 };
     if (!pick || pick.confidence < MIN_CONF) {
       return { ok: false, action: 'keep_review', reason: 'below_min_confidence', min_confidence: MIN_CONF, submitted: false, published: false };
     }
@@ -503,6 +448,10 @@
       if (next) { next.click(); await wait(220); }
       await waitFor(function () { return document.getElementById('add-title'); }, 6000);
       try { await waitFor(function () { return document.querySelector('[data-attr-toggle], .attr-miss'); }, 8000); } catch (e) {}
+      if (window.CARVO_SELLER_ADD && window.CARVO_SELLER_ADD.setVariants) {
+        window.CARVO_SELLER_ADD.setVariants(packetColors(pk), packetSizes(pk));
+        await wait(120);
+      }
       texts = fillTexts(pk);
       attrs = fillAttrs(allFields(data, pick.id), pk);
       skus = fillSkus(pk);
@@ -531,6 +480,7 @@
       published: false
     };
     var title = document.getElementById('add-title');
+    if (!document.querySelector('[data-sku]')) { result.reason = 'no_packet_variants'; return result; }
     if (attrs.left.length || !title || title.value.trim().length < 5) {
       result.reason = attrs.left.length ? 'required_left' : 'title_missing';
       return result;
