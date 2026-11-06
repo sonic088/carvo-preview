@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CARVO — Dossier de conception · Novembre 2026</title>
+<style>
+  :root {
+    --green: #0b3d2e;
+    --green-action: #0f6b4c;
+    --amber: #b45309;
+    --bg: #f4f5f3;
+    --card: #ffffff;
+    --ink: #111827;
+    --muted: #6b7280;
+    --line: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    background: var(--bg); color: var(--ink); line-height: 1.45;
+  }
+  header {
+    background: var(--green); color: #fff; padding: 28px 24px 24px;
+  }
+  header .eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+  header h1 { margin: 6px 0 8px; font-size: 28px; font-weight: 650; }
+  header p { margin: 0; max-width: 72ch; opacity: .92; font-size: 15px; }
+  nav.toc {
+    display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 5;
+  }
+  nav.toc a {
+    text-decoration: none; color: var(--green); background: #e8f2ed; border-radius: 999px;
+    padding: 6px 12px; font-size: 13px; font-weight: 600;
+  }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px; }
+  section { margin: 0 0 40px; }
+  section h2 {
+    margin: 0 0 6px; font-size: 22px; color: var(--green);
+  }
+  section .decision {
+    margin: 0 0 16px; color: var(--muted); font-size: 14px; max-width: 90ch;
+  }
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;
+  }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .card a.shot { display: block; background: #eceeea; }
+  .card img {
+    width: 100%; height: auto; display: block; vertical-align: top;
+  }
+  .card .meta { padding: 12px 14px 14px; }
+  .card .meta .kicker { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--green-action); font-weight: 700; }
+  .card .meta h3 { margin: 4px 0 6px; font-size: 15px; }
+  .card .meta p { margin: 0; font-size: 13px; color: var(--muted); }
+  .card .meta .links { margin-top: 8px; font-size: 12px; }
+  .card .meta .links a { color: var(--green-action); margin-right: 10px; }
+  .note {
+    background: #fff8eb; border: 1px solid #f3e0b5; color: #7a4a08; border-radius: 10px;
+    padding: 12px 14px; font-size: 13px; margin-bottom: 20px;
+  }
+  footer { padding: 24px; text-align: center; color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Dossier de conception · Novembre 2026</div>
+  <h1>CARVO — Seller Center, ERP &amp; Back office</h1>
+  <p>Source of truth exportée page par page depuis le PDF (28 pages, 175 dpi). Craft lock : vert profond, Inter, cartes blanches, un seul vert d’action, ambre pour l’attention. Données d’exemple uniquement.</p>
+</header>
+<nav class="toc">
+  <a href="#docs">Docs (1–4)</a>
+  <a href="#seller">Seller Center (5–11)</a>
+  <a href="#erp">ERP vendeur n°1 (12)</a>
+  <a href="#backoffice">Back office (13–28)</a>
+</nav>
+<main>
+  <div class="note">
+    Inventaire complet du dossier — aucune page omise. JPG pour lecture rapide ; PNG masters en <code>png/</code>.
+    Craft Seller/ERP/Back office = vert profond (pas #C8007F). La boutique app conserve #C8007F hors scope.
+  </div>
+
+  <section id="docs">
+    <h2>Docs — Méthode &amp; règles</h2>
+    <p class="decision">Pages d’ouverture du dossier : couverture, méthode (6), règles (10), arborescence back office.</p>
+    <div class="grid" id="grid-docs"></div>
+  </section>
+
+  <section id="seller">
+    <h2>Seller Center</h2>
+    <p class="decision">Sept écrans vendeur exportés du dossier. Décision par écran écrite sous chaque carte.</p>
+    <div class="grid" id="grid-seller"></div>
+  </section>
+
+  <section id="erp">
+    <h2>ERP vendeur n°1</h2>
+    <p class="decision">Fiche produit complète : feuille, informations, couleurs/photos (glisser-déposer), SKU/stock, guide des tailles, aperçu application, contrôle avant envoi. Données brutes 1688 ne sortent jamais de l’ERP.</p>
+    <div class="grid" id="grid-erp"></div>
+  </section>
+
+  <section id="backoffice">
+    <h2>Back office</h2>
+    <p class="decision">Seize écrans internes (pages 13–28) : Pilotage, Opérations, Catalogue, Vendeurs &amp; argent, Boucle.</p>
+    <div class="grid" id="grid-backoffice"></div>
+  </section>
+</main>
+<footer>CARVO design reference · https://sonic088.github.io/carvo-preview/design/dossier/</footer>
+<script>
+const screens = [
+  {g:'docs', page:1, file:'01-couverture', title:'Couverture', decision:'Seller Center, ERP & Back office — Novembre 2026.'},
+  {g:'docs', page:2, file:'02-methode', title:'Méthode (6)', decision:'Décision d’abord · source de chaque chiffre · inconnu reste inconnu · niveau des grands · identité CARVO · états complets.'},
+  {g:'docs', page:3, file:'03-regles', title:'Règles (10)', decision:'Feuille seule · attributs liste · stock réel · guide cm · approbation · oui téléphone · source · audit · badges nuit · même porte.'},
+  {g:'docs', page:4, file:'04-arborescence', title:'Arborescence', decision:'Quinze écrans back office en cinq groupes + ERP vendeur n°1 + fiche produit.'},
+
+  {g:'seller', page:5, file:'seller-dash', title:'Tableau de bord vendeur', decision:'Commandes à confirmer, produits refusés, prochain reversement. Stock faible = stock réel.'},
+  {g:'seller', page:6, file:'seller-produits', title:'Produits', decision:'Catalogue + validation CARVO + stock par SKU + refus avec motif.'},
+  {g:'seller', page:7, file:'seller-ajouter-feuille', title:'Ajouter · 1. Feuille', decision:'Choisir la feuille (rayon › catégorie › feuille). Jamais un parent.'},
+  {g:'seller', page:8, file:'seller-ajouter-details', title:'Ajouter · 2. Détails & variantes', decision:'Attributs liste, photos 3:4, SKU stock réel (vide=inconnu), guide cm.'},
+  {g:'seller', page:9, file:'seller-commandes', title:'Commandes COD', decision:'Une commande part seulement après confirmation téléphonique CARVO.'},
+  {g:'seller', page:10, file:'seller-paiements', title:'Paiements', decision:'COD transporteur, relevés hebdo, commission 8 %, référence virement.'},
+  {g:'seller', page:11, file:'seller-parametres', title:'Paramètres & permissions', decision:'Portes Excel/formulaire/API/moteur 1688 accordées par CARVO.'},
+
+  {g:'erp', page:12, file:'erp-fiche-produit', title:'ERP vendeur n°1 · Fiche produit', decision:'Saisie complète : feuille, infos, couleurs/photos drag-drop, SKU/stock, guide, aperçu app, contrôle avant envoi.'},
+
+  {g:'backoffice', page:13, file:'bo-accueil', title:'Accueil', decision:'Files du jour par coût du retard, entonnoir commandes, alertes.'},
+  {g:'backoffice', page:14, file:'bo-sante-jobs', title:'Santé des jobs', decision:'14 dernières exécutions ; sans ligne = jamais exécuté.'},
+  {g:'backoffice', page:15, file:'bo-journal-audit', title:'Journal d’audit', decision:'Qui a fait quoi, avant/après ; lecture seule ; téléphones masqués.'},
+  {g:'backoffice', page:16, file:'bo-confirmation-cod', title:'Confirmation COD', decision:'File d’appel par temps restant avant annulation 48 h.'},
+  {g:'backoffice', page:17, file:'bo-commandes', title:'Commandes', decision:'Tous statuts commande ≠ colis ; chronologie.'},
+  {g:'backoffice', page:18, file:'bo-clients-risque', title:'Clients à risque', decision:'Signaux refus/annulations/sans réponse ; liste noire avec motif.'},
+  {g:'backoffice', page:19, file:'bo-transporteurs', title:'Transporteurs & bordereaux', decision:'Routage 69 wilayas, colis ouverts, relevé hebdo 4 résultats.'},
+  {g:'backoffice', page:20, file:'bo-approbations', title:'Approbations', decision:'File de contrôle ; rien en ligne sans oui humain.'},
+  {g:'backoffice', page:21, file:'bo-produits-stock', title:'Produits & stock', decision:'Stock inconnu affiché tel quel ; provenance ; badges calculés.'},
+  {g:'backoffice', page:22, file:'bo-arbre-categories', title:'Arbre des catégories', decision:'Rayon › catégorie › feuille ; attributs ; correspondance 1688.'},
+  {g:'backoffice', page:23, file:'bo-guides-tailles', title:'Guides de tailles', decision:'Modèles par feuille ; structure sans cm par défaut.'},
+  {g:'backoffice', page:24, file:'bo-importations-1688', title:'Importations 1688', decision:'Lots moteur, taux change garde-fou 7/14 j, produits bloqués.'},
+  {g:'backoffice', page:25, file:'bo-vendeurs-permissions', title:'Vendeurs & permissions', decision:'Portes, commission, auto-approbation après 50 propres.'},
+  {g:'backoffice', page:26, file:'bo-releves-vendeurs', title:'Relevés vendeurs', decision:'Brut − retours − commission − livraison = net ; référence.'},
+  {g:'backoffice', page:27, file:'bo-parametres-argent', title:'Paramètres d’argent', decision:'7 clés plateforme, bornes, source, journal.'},
+  {g:'backoffice', page:28, file:'bo-reassort-boucle', title:'Réassort & boucle', decision:'Propositions nuit ; une décision humaine par ligne.'},
+];
+for (const s of screens) {
+  const el = document.createElement('article');
+  el.className = 'card';
+  el.innerHTML = `
+    <a class="shot" href="png/${s.g}/${s.file}.png" target="_blank" rel="noopener">
+      <img loading="lazy" src="screens/${s.g}/${s.file}.jpg" alt="${s.title}" />
+    </a>
+    <div class="meta">
+      <div class="kicker">PDF p.${s.page} · ${s.g}</div>
+      <h3>${s.title}</h3>
+      <p>${s.decision}</p>
+      <div class="links">
+        <a href="screens/${s.g}/${s.file}.jpg">JPG</a>
+        <a href="png/${s.g}/${s.file}.png">PNG master</a>
+      </div>
+    </div>`;
+  document.getElementById('grid-' + s.g).appendChild(el);
+}
+</script>
+</body>
+</html>
