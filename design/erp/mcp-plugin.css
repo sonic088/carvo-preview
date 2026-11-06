@@ -1,0 +1,41 @@
+/* MCP Connect plugin — Seller ERP host slot. Does not rewrite the independent engine. */
+.mcp-wrap{display:flex;flex-direction:column;gap:16px}
+.mcp-intro{line-height:1.55;color:var(--muted,#667)}
+.mcp-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.mcp-cols{grid-template-columns:1fr}}
+.mcp-body{padding:16px;line-height:1.55}
+.mcp-body p{margin:0 0 10px}
+.mcp-body p:last-child{margin-bottom:0}
+.mcp-plugin{
+  border:1px dashed var(--line,#ddd);
+  border-radius:14px;
+  padding:14px;
+  background:var(--paper,#fff);
+}
+.mcp-plugin.is-on{border-style:solid;border-color:var(--g6,#1a6b4a)}
+.mcp-kicker{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted,#667);margin-bottom:6px}
+.mcp-plugin h3{margin:0 0 8px;font-size:16px}
+.mcp-status{
+  display:inline-block;
+  font-size:12px;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#eee;
+  margin-inline-start:8px;
+  vertical-align:middle;
+}
+.mcp-plugin.is-on .mcp-status{background:#d8f3e7;color:#0b2e23}
+.mcp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.mcp-tools{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 16px}
+.mcp-log{
+  margin:0 16px 16px;
+  padding:12px;
+  border-radius:10px;
+  background:var(--paper,#f6f6f4);
+  border:1px solid var(--line,#eee);
+  font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:pre-wrap;
+  max-height:280px;
+  overflow:auto;
+}
+.mcp-note{font-size:13px;color:var(--muted,#667);padding:0 16px 16px}
