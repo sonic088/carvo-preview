@@ -633,7 +633,8 @@
   };
   window.CARVO_SELLER_DATA = {
     apiBase: 'https://carvo-products.abdeslam-gh17.workers.dev',
-    sellerContract: 'POST https://api.carvo.dz/seller/v1/products — not live; local en_controle queue only',
+    sellerContract: 'POST /seller/v1/products — not live (api.carvo.dz unresolved); local en_controle queue labelled to contract',
+    sellerApiBase: '',
     getProducts() { return S.products; },
     getOrders() { return S.orders; },
     setCatalog(liveItems, meta) {
@@ -1394,6 +1395,9 @@
       p.published = false;
       if (p.local) persistLocalProducts();
       if (was !== 'en_controle') bumpQuota();
+      if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.enqueueProduct === 'function') {
+        window.CARVO_SELLER_CATALOG.enqueueProduct(p, { submit: true });
+      }
       toast(p.title.slice(0, 42) + '… envoyé au contrôle CARVO.');
       render(); return;
     }
@@ -1443,6 +1447,9 @@
     S.products.unshift(p);
     persistLocalProducts();
     if (submit) bumpQuota();
+    if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.enqueueProduct === 'function') {
+      window.CARVO_SELLER_CATALOG.enqueueProduct(p, { submit: !!submit });
+    }
     S.add = blankAdd();
     S.addStep = 1;
     toast(submit ? 'Produit soumis à la validation CARVO.' : 'Brouillon enregistré dans Produits.');

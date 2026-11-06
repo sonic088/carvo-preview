@@ -912,11 +912,168 @@
     mapDetailOnto(p, detail);
     return p;
   }
+
+  function sellerApiBase() {
+    var data = window.CARVO_SELLER_DATA;
+    if (data && data.sellerApiBase) return String(data.sellerApiBase).replace(/\/+$/, '');
+    try {
+      var v = localStorage.getItem('carvo.sellerErp.sellerApiBase');
+      if (v) return String(v).replace(/\/+$/, '');
+    } catch (e) { /* */ }
+    return '';
+  }
+  function toSellerPayload(p) {
+    if (!p) return null;
+    var titleFr = p.title || '';
+    var titleAr = p.titleAr || '';
+    var colors = (p.colors || []).map(function (c) {
+      var skus = (p.skus || []).filter(function (s) { return s.c === c.name; }).map(function (s) {
+        return {
+          sku_code: String(p.id) + '-' + String(c.name || 'x') + '-' + String(s.s || 'u'),
+          size_label: String(s.s || 'Unique'),
+          price_dzd: Number(p.price) || 0,
+          old_price_dzd: null,
+          stock: s.stock == null || s.stock === '' ? null : Number(s.stock)
+        };
+      });
+      if (!skus.length) {
+        skus = [{ sku_code: String(p.id) + '-' + String(c.name || 'x') + '-U', size_label: 'Unique', price_dzd: Number(p.price) || 0, old_price_dzd: null, stock: null }];
+      }
+      return {
+        name: c.name || '—',
+        hex: c.hex || undefined,
+        images: [],
+        skus: skus
+      };
+    });
+    if (!colors.length) {
+      colors = [{ name: '—', images: [], skus: [{ sku_code: String(p.id) + '-U', size_label: 'Unique', price_dzd: Number(p.price) || 0, stock: null }] }];
+    }
+    var size_chart = null;
+    if (p.sizeChart && Array.isArray(p.sizeChart.rows) && p.sizeChart.rows.length) {
+      size_chart = {
+        sizes: p.sizeChart.rows.map(function (r) {
+          var measures = {};
+          Object.keys(r).forEach(function (k) {
+            if (k === 'size') return;
+            var v = r[k];
+            if (Array.isArray(v)) measures[k + '_cm'] = v[0];
+            else if (v != null && v !== '') measures[k + '_cm'] = v;
+          });
+          return { size_label: String(r.size), measures: measures };
+        })
+      };
+    }
+    return {
+      external_id: String(p.code || p.id),
+      leaf_id: p.leafId || p.leaf || null,
+      title: { fr: titleFr, ar: titleAr || undefined },
+      description: p.desc ? { fr: p.desc } : undefined,
+      attributes: p.attrs && typeof p.attrs === 'object' ? p.attrs : {},
+      colors: colors,
+      size_chart: size_chart || undefined,
+      cod: true,
+      source: { door: 'formulaire', erp: 'seller-center' }
+    };
+  }
+  async function enqueueProduct(p, opts) {
+    opts = opts || {};
+    if (!p) return { ok: false, reason: 'no_product' };
+    var submit = !!opts.submit;
+    // Contract stamps
+    if (submit) {
+      p.submitted = true;
+      p.published = false;
+      p.status = 'en_controle';
+    } else {
+      p.submitted = false;
+      p.published = false;
+      if (!p.status) p.status = 'brouillon';
+    }
+    p.local = true;
+    p.sellerPayload = toSellerPayload(p);
+    p.sellerWrite = {
+      contract: 'POST /seller/v1/products',
+      mode: 'local_queue',
+      reason: 'seller_api_not_live',
+      submitted: !!p.submitted,
+      published: false
+    };
+    if (!submit) {
+      if (window.CARVO_SELLER_DATA && window.CARVO_SELLER_DATA.persistLocal) window.CARVO_SELLER_DATA.persistLocal();
+      return { ok: true, mode: 'local_draft', product: p };
+    }
+    var base = sellerApiBase();
+    if (!base) {
+      if (window.CARVO_SELLER_DATA && window.CARVO_SELLER_DATA.persistLocal) window.CARVO_SELLER_DATA.persistLocal();
+      return { ok: true, mode: 'local_queue', reason: 'seller_api_base_unset', product: p };
+    }
+    // Optional: when a stub/dev base is configured (never default prod)
+    try {
+      if (/publish/i.test(base)) throw new Error('forbidden_publish_base');
+      var url = base + '/seller/v1/products';
+      if (/\/import\/publish/i.test(url)) throw new Error('forbidden_publish_path');
+      var res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': String(p.id),
+          'Authorization': 'Bearer ' + (localStorage.getItem('carvo.sellerErp.sellerKey') || 'dev-stub')
+        },
+        body: JSON.stringify(p.sellerPayload)
+      });
+      var body = null;
+      try { body = await res.json(); } catch (e) { body = null; }
+      if (body && JSON.stringify(body).indexOf('daigou') !== -1) {
+        p.sellerWrite = { mode: 'rejected', reason: 'token_leak_guard' };
+        if (window.CARVO_SELLER_DATA && window.CARVO_SELLER_DATA.persistLocal) window.CARVO_SELLER_DATA.persistLocal();
+        return { ok: false, reason: 'token_leak_guard' };
+      }
+      if (res.status === 202 || res.status === 200) {
+        var row = body && body.results && body.results[0];
+        p.sellerWrite = {
+          contract: 'POST /seller/v1/products',
+          mode: 'stub_or_api',
+          http: res.status,
+          external_id: row && row.external_id,
+          api_status: row && row.status,
+          submitted: true,
+          published: false
+        };
+        p.submitted = true;
+        p.published = false;
+        p.status = 'en_controle';
+      } else {
+        p.sellerWrite = {
+          contract: 'POST /seller/v1/products',
+          mode: 'local_queue_fallback',
+          http: res.status,
+          reason: (body && body.errors && body.errors[0] && body.errors[0].code) || ('http_' + res.status),
+          submitted: true,
+          published: false
+        };
+      }
+    } catch (e) {
+      p.sellerWrite = {
+        contract: 'POST /seller/v1/products',
+        mode: 'local_queue_fallback',
+        reason: String(e && e.message || e),
+        submitted: true,
+        published: false
+      };
+    }
+    if (window.CARVO_SELLER_DATA && window.CARVO_SELLER_DATA.persistLocal) window.CARVO_SELLER_DATA.persistLocal();
+    return { ok: true, mode: p.sellerWrite.mode, product: p };
+  }
+
   window.CARVO_SELLER_CATALOG = {
     apiBase: PRODUCTS_API,
     reload: reloadCatalog,
     search: searchCatalog,
-    ensureDetail: ensureDetail
+    ensureDetail: ensureDetail,
+    toSellerPayload: toSellerPayload,
+    enqueueProduct: enqueueProduct,
+    sellerApiBase: sellerApiBase
   };
 
   function boot() {
