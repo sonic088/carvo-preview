@@ -4,7 +4,7 @@
 
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
-  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
   const da = (n) => (n == null || n === '' ? '—' : Number(n).toLocaleString('fr-FR') + ' DA');
   const sum = (a, fn) => a.reduce((s, x) => s + (fn ? fn(x) : x), 0);
   const stockOf = (p) => {
@@ -600,11 +600,34 @@
     ficheId: 'p8'
   };
 
+  const GUIDE_KEYS = ['chest','waist','hip','length'];
+  function guideRows(a) {
+    return (a.sizes || []).map((sz) => {
+      const row = { size: sz };
+      GUIDE_KEYS.forEach((k) => {
+        const raw = String((a.guide || {})[sz+'|'+k] ?? '').trim();
+        const m = raw.match(/^(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)$/);
+        if (m) row[k] = [Number(m[1].replace(',','.')), Number(m[2].replace(',','.'))];
+        else if (raw !== '' && isFinite(Number(raw.replace(',','.')))) row[k] = Number(raw.replace(',','.'));
+      });
+      return row;
+    }).filter((r) => Object.keys(r).length > 1);
+  }
+  window.CARVO_SELLER_ADD = {
+    setVariants(colors, sizes) {
+      S.add.colors = (colors || []).map((c) => ({ name: String(c.name || c), hex: c.hex || '#dddddd', photos: 0 }));
+      S.add.sizes = (sizes || []).map(String);
+      S.add.stocks = {};
+      S.add.guide = {};
+      render();
+    }
+  };
+
   function blankAdd() {
     return {
       deptKey: 'women', deptEn: 'Women', path: [], leafId: null, leafEn: null, leafAr: '',
       catId: null, expanded: {}, treeQ: '', leafQ: '',
-      title:'', titleAr:'', desc:'', attrs:{}, colors:[{name:'Bleu',hex:'#7aa3c9',photos:0},{name:'Rouge',hex:'#d96b6b',photos:0}], sizes:['S','M','L','XL'], stocks:{}, price:''
+      title:'', titleAr:'', desc:'', attrs:{}, colors:[{name:'Bleu',hex:'#7aa3c9',photos:0},{name:'Rouge',hex:'#d96b6b',photos:0}], sizes:['S','M','L','XL'], stocks:{}, guide:{}, price:''
     };
   }
 
@@ -839,10 +862,7 @@
             <div class="tw"><table>
               <thead><tr><th>Taille</th><th>Poitrine</th><th>Taille</th><th>Hanches</th><th>Longueur</th></tr></thead>
               <tbody>
-                <tr><td>S</td><td><input class="mini" value="86"></td><td><input class="mini" value="68"></td><td><input class="mini" value="92"></td><td><input class="mini" value="112"></td></tr>
-                <tr><td>M</td><td><input class="mini" value="90"></td><td><input class="mini" value="72"></td><td><input class="mini" value="96"></td><td><input class="mini" value="113"></td></tr>
-                <tr><td>L</td><td><input class="mini" value="94"></td><td><input class="mini" value="76"></td><td><input class="mini" value="100"></td><td><input class="mini" value="114"></td></tr>
-                <tr><td>XL</td><td><input class="mini" value="98"></td><td><input class="mini" value="80"></td><td><input class="mini" value="104"></td><td><input class="mini" value="115"></td></tr>
+                ${a.sizes.map((sz)=>`<tr><td>${esc(sz)}</td>${GUIDE_KEYS.map((k)=>{ const v=(a.guide||{})[sz+'|'+k]; return `<td><input class="mini" placeholder="?" data-guide="${esc(sz+'|'+k)}" value="${v==null?'':esc(v)}"></td>`; }).join('')}</tr>`).join('')}
               </tbody>
             </table></div>
           </div>
@@ -1337,7 +1357,8 @@
       status: submit ? 'en_controle' : 'brouillon',
       badges: submit ? [] : [],
       source: 'formulaire',
-      color: a.colors[0].hex,
+      color: (a.colors[0] || {}).hex || '#dddddd',
+      sizeChart: { unit: 'cm', columns: ['size'].concat(GUIDE_KEYS), rows: guideRows(a) },
       colors: a.colors.map((c)=>({...c})),
       attrs: JSON.parse(JSON.stringify(a.attrs || {})),
       skus
@@ -1357,12 +1378,14 @@
     const price = $('#add-price'); if (price) S.add.price = price.value;
     $$('[data-attr]').forEach((el) => { S.add.attrs[el.getAttribute('data-attr')] = el.value; });
     $$('[data-sku]').forEach((el) => { S.add.stocks[el.getAttribute('data-sku')] = el.value; });
+    $$('[data-guide]').forEach((el) => { S.add.guide = S.add.guide || {}; S.add.guide[el.getAttribute('data-guide')] = el.value; });
   }
 
   function onInput(e) {
     const el = e.target;
     if (el.id === 'add-title' || el.id === 'add-titleAr' || el.id === 'add-desc' || el.id === 'add-price') grabAddFields();
     if (el.hasAttribute('data-sku')) S.add.stocks[el.getAttribute('data-sku')] = el.value;
+    if (el.hasAttribute('data-guide')) { S.add.guide = S.add.guide || {}; S.add.guide[el.getAttribute('data-guide')] = el.value; }
     if (el.hasAttribute('data-attr')) S.add.attrs[el.getAttribute('data-attr')] = el.value;
     if (el.hasAttribute('data-attr-q')) {
       const q = el.value.trim().toLowerCase();
@@ -1423,7 +1446,7 @@
   document.addEventListener('change', onChange);
   document.addEventListener('click', onSort);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
-  window.addEventListener('hashchange', () => { $('#side').classList.remove('on'); $('#scrim').classList.remove('on'); render(); });
+  window.addEventListener('hashchange', () => { const sd = $('#side'); if (sd) sd.classList.remove('on'); const sc = $('#scrim'); if (sc) sc.classList.remove('on'); render(); });
 
   if (!location.hash) location.hash = '#/dash';
   loadCategoryTree();
