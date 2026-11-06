@@ -185,16 +185,37 @@
     return null;
   }
 
-  function requiredOnly(data, id) {
+  function leafRecord(data, id) {
     var rec = data && data.leaves && data.leaves[id];
     if (!rec) return null;
-    var fields = (rec.fields || []).filter(function (f) { return !!f.required; });
+    var dict = data.dict || [];
+    function vals(f) {
+      return (f.values || []).map(function (i) {
+        return typeof i === 'number' ? (dict[i] != null ? dict[i] : String(i)) : String(i);
+      });
+    }
+    var required = (rec.fields || []).filter(function (f) { return !!f.required; });
+    return {
+      id: id,
+      name: rec.en || id,
+      required: required.map(function (f) { return { key: f.key, values: vals(f) }; })
+    };
+  }
+
+  function requiredOnly(data, id) {
+    var rec = leafRecord(data, id);
+    if (!rec) return null;
     return {
       ok: true,
-      leaf_id: id,
-      name: rec.en || id,
-      required: fields.map(function (f) { return f.key; })
+      leaf_id: rec.id,
+      name: rec.name,
+      required: rec.required.map(function (f) { return f.key; })
     };
+  }
+
+  function cssAttr(sel) {
+    if (window.CSS && CSS.escape) return CSS.escape(sel);
+    return String(sel).replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
   async function callTool(name, args) {
@@ -222,38 +243,133 @@
     return { ok: false, error: 'unknown_tool', name: name };
   }
 
-  async function arrangeProduct(wantedId) {
+  async function pickSuggested(wantedId) {
     var pick = null;
     var i;
     if (wantedId) {
       for (i = 0; i < SUGGEST.length; i++) {
         if (SUGGEST[i].id === wantedId) pick = SUGGEST[i];
       }
-      if (!pick) pick = { id: wantedId, confidence: 0 };
+      if (!pick) pick = { id: wantedId, confidence: 1 };
     } else {
       for (i = 0; i < SUGGEST.length; i++) {
         if (SUGGEST[i].confidence >= MIN_CONF) { pick = SUGGEST[i]; break; }
       }
     }
+    return pick;
+  }
+
+  async function openAjouterPicker() {
+    var back = document.querySelector('[data-back-leaf]');
+    if (back) {
+      back.click();
+      await wait(160);
+    }
+    if (location.hash.replace(/^#\/?/, '').split(/[/?]/)[0] !== 'ajouter') {
+      location.hash = '#/ajouter';
+    }
+    await waitFor(function () {
+      return document.querySelector('[data-pick-leaf], [data-leaf], [data-dept], #cat-search');
+    }, 8000);
+  }
+
+  async function selectLeafInPicker(id, name) {
+    var sel = '[data-pick-leaf="' + id + '"], [data-leaf="' + id + '"]';
+    var btn = document.querySelector(sel);
+    if (!btn) {
+      var search = document.getElementById('cat-search');
+      if (search && name) {
+        search.focus();
+        search.value = name;
+        search.dispatchEvent(new Event('input', { bubbles: true }));
+        btn = await waitFor(function () {
+          return document.querySelector('#picker-results [data-pick-leaf="' + id + '"], ' + sel);
+        }, 6000);
+      }
+    }
+    if (!btn) throw new Error('leaf_not_visible');
+    btn.click();
+    await wait(220);
+  }
+
+  async function fillKnownArrangement(id) {
+    var filled = [];
+    var left = [];
+    var data = await loadAttrs();
+    var rec = leafRecord(data, id);
+    var title = document.getElementById('add-title');
+    if (title && rec && rec.name && !title.value.trim()) {
+      title.value = rec.name;
+      title.dispatchEvent(new Event('input', { bubbles: true }));
+      title.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    try {
+      await waitFor(function () {
+        return document.querySelector('[data-attr-toggle], [data-save-draft]');
+      }, 8000);
+    } catch (e) {}
+    var fields = (rec && rec.required) || [];
+    var i, f, chip;
+    for (i = 0; i < fields.length; i++) {
+      f = fields[i];
+      if (f.values.length === 1) {
+        chip = document.querySelector('[data-attr-toggle="' + cssAttr(f.key) + '"][data-val="' + cssAttr(f.values[0]) + '"]');
+        if (chip && !chip.classList.contains('on')) chip.click();
+        if (chip) filled.push(f.key);
+        else left.push(f.key);
+      } else {
+        left.push(f.key);
+      }
+    }
+    return { title: rec ? rec.name : id, filled: filled, left: left };
+  }
+
+  async function arrangeProduct(wantedId) {
+    var pick = await pickSuggested(wantedId);
     if (!pick || pick.confidence < MIN_CONF) {
       return { ok: false, action: 'keep_review', reason: 'below_min_confidence', min_confidence: MIN_CONF };
     }
-    location.hash = '#/ajouter';
+    var name = pick.id;
     try {
-      var btn = await waitFor(function () {
-        return document.querySelector('[data-pick-leaf="' + pick.id + '"], [data-leaf="' + pick.id + '"]');
-      }, 6000);
-      btn.click();
-      await wait(180);
+      var data = await loadAttrs();
+      var rec = leafRecord(data, pick.id);
+      if (rec) name = rec.name;
+    } catch (e) {}
+    try {
+      await openAjouterPicker();
+      await selectLeafInPicker(pick.id, name);
       var next = document.querySelector('[data-to-details]');
-      if (next) next.click();
+      if (next) {
+        next.click();
+        await wait(220);
+      }
+      await waitFor(function () {
+        return document.getElementById('add-title') || document.querySelector('[data-save-draft]');
+      }, 6000);
+      var arranged = await fillKnownArrangement(pick.id);
     } catch (e) {
       return { ok: false, error: 'ajouter_not_ready', leaf_id: pick.id };
     }
     var st = loadState();
     st.lastLeaf = pick.id;
     saveState(st);
-    return { ok: true, action: 'opened_details', leaf_id: pick.id, confidence: pick.confidence };
+    lastRead = {
+      ok: true,
+      leaf_id: pick.id,
+      name: arranged.title,
+      required: arranged.filled.concat(arranged.left)
+    };
+    return {
+      ok: true,
+      action: 'arranged',
+      leaf_id: pick.id,
+      confidence: pick.confidence,
+      title: arranged.title,
+      required_filled: arranged.filled,
+      required_left: arranged.left,
+      filled_measurements: false,
+      published: false
+    };
   }
 
   async function connectPlugin() {
