@@ -1429,6 +1429,8 @@
       leafId: a.leafId,
       price: Number(a.price) || 0,
       status: submit ? 'en_controle' : 'brouillon',
+      submitted: !!submit,
+      published: false,
       badges: submit ? [] : [],
       source: 'formulaire',
       color: (a.colors[0] || {}).hex || '#dddddd',
@@ -1436,9 +1438,7 @@
       colors: a.colors.map((c)=>({...c})),
       attrs: JSON.parse(JSON.stringify(a.attrs || {})),
       skus,
-      local: true,
-      published: false,
-      submitted: !!submit
+      local: true
     };
     S.products.unshift(p);
     persistLocalProducts();

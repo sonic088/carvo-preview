@@ -84,10 +84,10 @@
         }
       },
       "size_guide_mapping": {
-        "chest": "Poitrine",
-        "waist": "Taille",
-        "hip": "Hanches",
-        "length|skirt_length|pants_length": "Longueur"
+        "chest|bust|bust_size|bust_circ|chest_circ|poitrine": "Poitrine",
+        "waist|waistline|waist_circ|taille": "Taille",
+        "hip|hips|hip_circ|hanches": "Hanches",
+        "length|skirt_length|pants_length|trouser_length|dress_length|garment_length|clothes_length|total_length|body_length|longueur": "Longueur"
       },
       "size_guide_rule": "inputs [data-guide=\"<size>|chest|waist|hip|length\"]; start empty; only packet numbers written; saved on submit as product.sizeChart {unit:'cm',rows}",
       "submit_rule": "clicks [data-submit-add] (Soumettre à la validation → en_controle) only when leaf chosen, confidence >= 0.8, title >= 5 chars and no required field left",
@@ -102,7 +102,7 @@
         "required_left": [],
         "skus": {},
         "size_guide": {},
-        "submitted": "bool",
+        "submitted": "bool — true only after Soumettre à la validation; product.submitted mirrors this",
         "status": "en_controle|null",
         "published": false
       }

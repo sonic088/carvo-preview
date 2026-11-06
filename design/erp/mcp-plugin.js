@@ -364,7 +364,17 @@
     return { filled: filled, skipped: skipped, left: left };
   }
 
-  var GUIDE_KEY = { chest: 'chest', waist: 'waist', hip: 'hip', length: 'length', skirt_length: 'length', pants_length: 'length' };
+  var GUIDE_KEY = {
+    chest: 'chest', bust: 'chest', bust_size: 'chest', bust_circ: 'chest', chest_circ: 'chest', chest_circumference: 'chest', poitrine: 'chest',
+    waist: 'waist', waistline: 'waist', waist_circ: 'waist', waist_circumference: 'waist', taille: 'waist',
+    hip: 'hip', hips: 'hip', hip_circ: 'hip', hip_circumference: 'hip', hanches: 'hip',
+    length: 'length', skirt_length: 'length', pants_length: 'length', trouser_length: 'length',
+    dress_length: 'length', garment_length: 'length', clothes_length: 'length', clothing_length: 'length',
+    total_length: 'length', body_length: 'length', robe_length: 'length', longueur: 'length'
+  };
+  function normGuideKey(k) {
+    return String(k || '').toLowerCase().replace(/\(.*?\)/g, '').replace(/_cm$/g, '').replace(/_range$/g, '').replace(/[\s-]+/g, '_').replace(/^_+|_+$/g, '');
+  }
 
   function fillGuide(chart) {
     var res = { filled_cells: 0, sizes_missing_in_ui: [], keys_not_in_ui: [] };
@@ -377,7 +387,7 @@
       var usedLen = false;
       Object.keys(r).forEach(function (k) {
         if (k === 'size') return;
-        var base = k.replace(/_range$/, '');
+        var base = normGuideKey(k);
         var col = GUIDE_KEY[base];
         if (!col) { if (res.keys_not_in_ui.indexOf(base) < 0) res.keys_not_in_ui.push(base); return; }
         if (col === 'length') { if (usedLen) return; usedLen = true; }
