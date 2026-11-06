@@ -19,27 +19,383 @@
     return low ? t + ' · ' + low + ' faible' : String(t);
   };
 
-  const TREE = {
-    Femme: {
-      'Vêtements': ["Robes d'été", 'Robes casual', 'Robes longues', 'Robes de soirée', 'Ensembles · Deux pièces', 'Chemisiers'],
-      'Lingerie & culottes': ['Ensembles', 'Nuisettes'],
-      Accessoires: ['Écharpes', 'Ceintures']
-    },
-    Enfant: { Fille: ['Robes', 'Ensembles'], Garçon: ['T-shirts'] },
-    Chaussures: { Femme: ['Sandales plates', 'Baskets'], Homme: ['Baskets'] },
-    'Sacs & bagages': { Femme: ['Sacs bandoulière', 'Sacs à main'], Homme: ['Sacoches'] }
-  };
-
   const ATTRS = {
     "Robes d'été": { 'Longueur de manches': ['Sans manches', 'Manches courtes', 'Manches longues'], Longueur: ['Mini', 'Midi', 'Maxi'], Matière: ['Coton', 'Viscose', 'Lin', 'Satin'], Coupe: ['Regular', 'Slim', 'Oversize'], Occasion: ['Quotidien', 'Soirée', 'Mariage'], Motif: ['Uni', 'Fleuri', 'Rayé'] },
     default: { Matière: ['Coton', 'Viscose', 'Cuir', 'Similicuir'], Motif: ['Uni', 'Imprimé'] }
   };
 
-  const SUGGEST = [
-    { leaf: "Femme › Vêtements › Robes d'été", pct: 92 },
-    { leaf: 'Femme › Vêtements › Robes casual', pct: 46 },
-    { leaf: 'Femme › Vêtements › Robes longues', pct: 38 }
+
+  const SUGGEST_IDS = [
+    { id: 'CAT-SH12478', pct: 92 },
+    { id: 'CAT-SH12476', pct: 46 },
+    { id: 'CAT-SH1727', pct: 38 }
   ];
+
+  const CAT = { ready: false, error: false, tops: [], byId: {}, leaves: [], leafById: {} };
+
+  function indexTree(data) {
+    CAT.byId = {};
+    CAT.leaves = [];
+    CAT.leafById = {};
+    const tops = (data.tops || []).filter((t) => t.visible !== false);
+    tops.forEach((t) => {
+      CAT.byId[t.id] = {
+        id: t.id, key: t.key, en: t.en, ar: t.ar || '', isTop: true,
+        children: t.children || [], leaves: t.leaves || 0, n: t.n
+      };
+    });
+    function walk(nodes, dept, ancestors) {
+      (nodes || []).forEach((n) => {
+        const parentId = ancestors.length ? ancestors[ancestors.length - 1].id : dept.id;
+        const rec = {
+          id: n.id, en: n.en, ar: n.ar || '', isLeaf: !!n.isLeaf,
+          children: n.children || [], leaves: n.leaves || (n.isLeaf ? 1 : 0),
+          parentId, deptKey: dept.key, deptEn: dept.en, isTop: false
+        };
+        CAT.byId[n.id] = rec;
+        if (n.isLeaf) {
+          const path = [dept.en].concat(ancestors.map((a) => a.en), [n.en]);
+          const item = {
+            id: n.id, en: n.en, ar: n.ar || '',
+            deptKey: dept.key, deptEn: dept.en,
+            parentId, ancestorIds: ancestors.map((a) => a.id),
+            path, hay: (path.join(' ') + ' ' + (n.ar || '')).toLowerCase()
+          };
+          CAT.leaves.push(item);
+          CAT.leafById[n.id] = item;
+        } else {
+          walk(n.children, dept, ancestors.concat([{ id: n.id, en: n.en }]));
+        }
+      });
+    }
+    tops.forEach((t) => walk(t.children, t, []));
+    CAT.tops = tops;
+    CAT.ready = true;
+    CAT.error = false;
+  }
+
+  function loadCategoryTree() {
+    if (CAT._once) return;
+    CAT._once = true;
+    fetch('data/category-tree.json?v=1')
+      .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then((data) => { indexTree(data); if (route() === 'ajouter') render(); })
+      .catch(() => { CAT.error = true; if (route() === 'ajouter') render(); });
+  }
+
+  function addPathLabel(a) {
+    if (a.path && a.path.length) return a.path.join(' › ');
+    return a.leafEn || '';
+  }
+
+  function crumbParts(a) {
+    if (a.path && a.path.length) return a.path.slice();
+    const parts = [];
+    if (a.deptEn) parts.push(a.deptEn);
+    if (a.catId && CAT.byId[a.catId] && !CAT.byId[a.catId].isTop) {
+      const up = [];
+      let cur = CAT.byId[a.catId];
+      while (cur && !cur.isTop && up.length < 12) {
+        up.push(cur.en);
+        cur = CAT.byId[cur.parentId];
+      }
+      parts.push(...up.reverse());
+    }
+    return parts;
+  }
+
+  function selectDept(key) {
+    const top = CAT.tops.find((t) => t.key === key);
+    S.add.deptKey = key;
+    S.add.deptEn = top ? top.en : key;
+    S.add.catId = null;
+    S.add.leafId = null;
+    S.add.leafEn = null;
+    S.add.leafAr = '';
+    S.add.path = [];
+    S.add.leafQ = '';
+    S.add.expanded = {};
+  }
+
+  function selectCat(id) {
+    const node = CAT.byId[id];
+    if (!node || node.isLeaf) return;
+    S.add.catId = id;
+    if (node.deptKey) {
+      S.add.deptKey = node.deptKey;
+      S.add.deptEn = node.deptEn;
+    }
+    S.add.leafId = null;
+    S.add.leafEn = null;
+    S.add.leafAr = '';
+    S.add.path = [];
+    S.add.leafQ = '';
+    if ((node.children || []).some((c) => !c.isLeaf)) S.add.expanded[id] = true;
+  }
+
+  function selectLeafById(id) {
+    const leaf = CAT.leafById[id];
+    if (!leaf) return false;
+    S.add.deptKey = leaf.deptKey;
+    S.add.deptEn = leaf.deptEn;
+    S.add.path = leaf.path.slice();
+    S.add.leafId = leaf.id;
+    S.add.leafEn = leaf.en;
+    S.add.leafAr = leaf.ar || '';
+    S.add.catId = leaf.parentId;
+    leaf.ancestorIds.forEach((aid) => { S.add.expanded[aid] = true; });
+    S.add.treeQ = '';
+    S.add.leafQ = '';
+    S.add._focus = null;
+    return true;
+  }
+
+  function currentLeafNodes() {
+    const a = S.add;
+    if (a.catId && CAT.byId[a.catId] && !CAT.byId[a.catId].isTop) {
+      return (CAT.byId[a.catId].children || []).filter((c) => c.isLeaf);
+    }
+    const top = CAT.tops.find((t) => t.key === a.deptKey);
+    return ((top && top.children) || []).filter((c) => c.isLeaf);
+  }
+
+  function renderBranches(nodes, depth) {
+    return (nodes || []).filter((n) => !n.isLeaf).map((n) => {
+      const hasNested = (n.children || []).some((c) => !c.isLeaf);
+      const open = !!S.add.expanded[n.id];
+      const on = S.add.catId === n.id;
+      return `<div class="picker-br-wrap">
+        <button type="button" class="picker-br ${on ? 'on' : ''}" data-cat="${esc(n.id)}" style="--d:${depth}">
+          ${hasNested ? `<span class="picker-twisty${open ? ' open' : ''}" data-expand="${esc(n.id)}"></span>` : `<span class="picker-twisty sp"></span>`}
+          <span class="picker-br-label">${esc(n.en)}</span>
+          <span class="picker-count">${n.leaves || 0}</span>
+        </button>
+        ${hasNested ? `<div class="picker-nest"${open ? '' : ' hidden'}>${renderBranches(n.children, depth + 1)}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  function searchLeaves(q) {
+    const nq = (q || '').trim().toLowerCase();
+    if (!nq) return [];
+    const all = CAT.leaves.filter((l) => l.hay.includes(nq));
+    all.sort((a, b) => {
+      const as = a.en.toLowerCase().startsWith(nq) ? 0 : (a.en.toLowerCase().includes(nq) ? 1 : 2);
+      const bs = b.en.toLowerCase().startsWith(nq) ? 0 : (b.en.toLowerCase().includes(nq) ? 1 : 2);
+      if (as !== bs) return as - bs;
+      return a.path.length - b.path.length || a.en.localeCompare(b.en);
+    });
+    return all;
+  }
+
+  function renderSearchResults() {
+    const box = $('#picker-results');
+    if (!box) return;
+    const raw = (S.add.treeQ || '').trim();
+    if (!raw) { box.hidden = true; box.innerHTML = ''; return; }
+    const all = searchLeaves(raw);
+    const show = all.slice(0, 60);
+    box.hidden = false;
+    if (!show.length) {
+      box.innerHTML = `<p class="picker-empty">Aucune feuille ne correspond à « ${esc(raw)} ». Essayez un autre mot (ex. T-shirts, Dresses, Bags).</p>`;
+      return;
+    }
+    box.innerHTML = show.map((l) => `
+      <button type="button" class="picker-hit" data-pick-leaf="${esc(l.id)}">
+        <b>${esc(l.en)}</b>
+        <span>${esc(l.path.join(' › '))}</span>
+      </button>`).join('') + (all.length > 60 ? `<p class="picker-more">${all.length} feuilles trouvées — affinez la recherche.</p>` : '');
+  }
+
+  function filterLeafButtons(q) {
+    const body = $('#picker-leaves');
+    if (!body) return;
+    const nq = (q || '').trim().toLowerCase();
+    let shown = 0, total = 0;
+    body.querySelectorAll('[data-leaf]').forEach((btn) => {
+      total++;
+      const ok = !nq || (btn.getAttribute('data-hay') || '').includes(nq);
+      btn.hidden = !ok;
+      if (ok) shown++;
+    });
+    let empty = body.querySelector('.picker-filter-empty');
+    if (!empty) {
+      empty = document.createElement('p');
+      empty.className = 'picker-empty picker-filter-empty';
+      body.appendChild(empty);
+    }
+    if (nq && shown === 0 && total) {
+      empty.hidden = false;
+      empty.textContent = 'Aucune feuille dans cette liste pour « ' + (q || '').trim() + ' ».';
+    } else {
+      empty.hidden = true;
+    }
+  }
+
+  function bindTreePicker() {
+    const search = $('#cat-search');
+    const leafq = $('#leaf-filter');
+    const cols = { dept: $('#cat-dept'), mid: $('#cat-mid'), leaf: $('#picker-leaves') };
+    S.add._scr = S.add._scr || { dept: 0, mid: 0, leaf: 0 };
+    if (cols.dept) cols.dept.scrollTop = S.add._scr.dept || 0;
+    if (cols.mid) cols.mid.scrollTop = S.add._scr.mid || 0;
+    if (cols.leaf) cols.leaf.scrollTop = S.add._scr.leaf || 0;
+    const remember = (key, el) => { if (el) el.addEventListener('scroll', () => { S.add._scr[key] = el.scrollTop; }); };
+    remember('dept', cols.dept); remember('mid', cols.mid); remember('leaf', cols.leaf);
+
+    if (search) {
+      search.addEventListener('input', () => {
+        S.add.treeQ = search.value;
+        S.add._focus = 'search';
+        S.add._caret = search.selectionStart;
+        clearTimeout(S._qT);
+        S._qT = setTimeout(renderSearchResults, 180);
+      });
+      search.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          S.add.treeQ = '';
+          search.value = '';
+          renderSearchResults();
+          e.preventDefault();
+        } else if (e.key === 'Enter') {
+          const first = $('#picker-results [data-pick-leaf]');
+          if (first) { first.click(); e.preventDefault(); }
+        }
+      });
+      if ((S.add.treeQ || '').trim()) renderSearchResults();
+      if (S.add._focus === 'search') {
+        search.focus();
+        const pos = S.add._caret == null ? search.value.length : S.add._caret;
+        try { search.setSelectionRange(pos, pos); } catch (_) {}
+      }
+    }
+    if (leafq) {
+      leafq.addEventListener('input', () => {
+        S.add.leafQ = leafq.value;
+        S.add._focus = 'leafq';
+        S.add._caret = leafq.selectionStart;
+        filterLeafButtons(leafq.value);
+      });
+      if (S.add.leafQ) filterLeafButtons(S.add.leafQ);
+      if (S.add._focus === 'leafq') {
+        leafq.focus();
+        const pos = S.add._caret == null ? leafq.value.length : S.add._caret;
+        try { leafq.setSelectionRange(pos, pos); } catch (_) {}
+      }
+    }
+    const leafCol = leafq ? leafq.closest('.picker-col') : $('#picker-leaves');
+    if (leafCol) {
+      leafCol.addEventListener('keydown', (e) => {
+        if (e.target && e.target.id === 'leaf-filter') return;
+        if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          const inp = $('#leaf-filter');
+          if (!inp) return;
+          S.add.leafQ = (S.add.leafQ || '') + e.key;
+          inp.value = S.add.leafQ;
+          filterLeafButtons(S.add.leafQ);
+          inp.focus();
+          e.preventDefault();
+        } else if (e.key === 'Backspace') {
+          const inp = $('#leaf-filter');
+          if (!inp) return;
+          S.add.leafQ = (S.add.leafQ || '').slice(0, -1);
+          inp.value = S.add.leafQ;
+          filterLeafButtons(S.add.leafQ);
+          inp.focus();
+          e.preventDefault();
+        }
+      });
+    }
+  }
+
+  function pickerHtml() {
+    const a = S.add;
+    if (!CAT.ready) {
+      return `<div class="card"><p class="picker-empty">${CAT.error
+        ? 'Impossible de charger l’arbre des catégories. Réessayez dans un instant.'
+        : 'Chargement de l’arbre CARVO (23 rayons)…'}</p></div>`;
+    }
+    const top = CAT.tops.find((t) => t.key === a.deptKey) || null;
+    const crumbs = crumbParts(a);
+    const crumbHtml = crumbs.length
+      ? crumbs.map((c, i) => (i === crumbs.length - 1 ? `<b>${esc(c)}</b>` : esc(c))).join(' <span>›</span> ')
+      : '<span class="mu">Aucun rayon sélectionné</span>';
+    const departments = CAT.tops.map((t) => {
+      const on = t.key === a.deptKey;
+      const num = String(t.n).padStart(2, '0');
+      const ar = t.ar ? `<small dir="rtl">${esc(t.ar)}</small>` : '';
+      return `<button type="button" class="picker-dept ${on ? 'on' : ''}" data-dept="${esc(t.key)}">
+        <span class="picker-num">${num}</span>
+        <span class="picker-dept-txt"><b>${esc(t.en)}</b>${ar}</span>
+        <span class="picker-count">${t.leaves}</span>
+      </button>`;
+    }).join('');
+
+    const midInner = top ? renderBranches(top.children, 0) : '';
+    const midEmpty = a.deptKey
+      ? `<p class="picker-empty">Aucune catégorie dans ce rayon.</p>`
+      : `<p class="picker-empty">Choisissez un rayon dans la colonne de gauche.</p>`;
+
+    const leafNodes = currentLeafNodes();
+    let leafInner;
+    if (!a.deptKey) {
+      leafInner = `<p class="picker-empty">Choisissez un rayon, puis une catégorie. Seules les feuilles sont sélectionnables, jamais un parent.</p>`;
+    } else if (!leafNodes.length) {
+      const selectedBranch = a.catId && CAT.byId[a.catId] && !CAT.byId[a.catId].isTop;
+      leafInner = selectedBranch
+        ? `<p class="picker-empty">Cette catégorie n’a pas de feuille directe. Ouvrez une sous-catégorie.</p>`
+        : `<p class="picker-empty">Choisissez une catégorie — seules les feuilles sont sélectionnables, jamais un parent.</p>`;
+    } else {
+      leafInner = leafNodes.map((n) => `<button type="button" class="picker-leaf ${a.leafId === n.id ? 'on' : ''}" data-leaf="${esc(n.id)}" data-hay="${esc((n.en || '').toLowerCase())}">${esc(n.en)}</button>`).join('');
+    }
+
+    const suggests = SUGGEST_IDS.map((s) => {
+      const leaf = CAT.leafById[s.id];
+      if (!leaf) return '';
+      return `<button class="btn sm" style="margin:0 6px 6px 0" type="button" data-pick-leaf="${esc(leaf.id)}">${esc(leaf.path.join(' › '))} · ${s.pct}%</button>`;
+    }).join('');
+
+    return `
+      <div class="card" style="margin-bottom:12px">
+        <h3>Suggestions d’après votre titre et vos photos</h3>
+        ${suggests || '<p class="mu">Aucune suggestion pour le moment.</p>'}
+      </div>
+      <div class="card picker-card">
+        <div class="picker-search-wrap">
+          <span class="picker-search-ic" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg></span>
+          <input id="cat-search" type="search" placeholder="Rechercher une feuille (T-shirts, Dresses, Bags…)" value="${esc(a.treeQ || '')}" autocomplete="off" />
+          <div id="picker-results" class="picker-results" hidden></div>
+        </div>
+        <div class="picker-sticky">
+          <div class="picker-crumb">${crumbHtml}</div>
+          ${a.leafId ? `<span class="picker-chip">${esc(a.leafEn)}</span>` : `<span class="picker-chip off">Aucune feuille</span>`}
+        </div>
+        <div class="picker-cols">
+          <div class="picker-col">
+            <h4>Rayon <span>${CAT.tops.length}</span></h4>
+            <div class="picker-body" id="cat-dept">${departments}</div>
+          </div>
+          <div class="picker-col">
+            <h4>Catégorie</h4>
+            <div class="picker-body" id="cat-mid">${midInner || midEmpty}</div>
+          </div>
+          <div class="picker-col">
+            <h4>Feuille${leafNodes.length ? `<span>${leafNodes.length}</span>` : ''}</h4>
+            ${leafNodes.length ? `<input id="leaf-filter" class="picker-filter" type="search" placeholder="Filtrer les feuilles…" value="${esc(a.leafQ || '')}" autocomplete="off" />` : ''}
+            <div class="picker-body" id="picker-leaves">${leafInner}</div>
+          </div>
+        </div>
+        <p class="picker-meta">${CAT.leaves.length.toLocaleString('fr-FR')} feuilles · ${CAT.tops.length} rayons SHEIN / CARVO · un parent n’est jamais sélectionnable</p>
+      </div>
+      ${a.leafId ? `<div class="card" style="background:var(--ambs);border-color:#f3e0b5;margin-top:12px">
+        <b>Cette feuille exige</b>
+        <ul class="check">
+          <li>• Attributs (liste) : ${Object.keys(ATTRS[a.leafEn] || ATTRS.default).join(', ')}</li>
+          <li>• Photos 3:4 par couleur · guide des tailles en cm</li>
+          <li>• Stock réel par SKU — vide = inconnu, jamais 0 inventé</li>
+        </ul>
+      </div>` : `<p class="mu" style="margin-top:12px">Aucune feuille choisie — le bouton Continuer reste bloqué.</p>`}`;
+  }
 
   const seedProducts = () => [
     { id:'p1', title:'Lina Coton Bleu Fleuri Robe d’été longue', titleAr:'لينا قطن أزرق مورّد فستان صيفي طويل', leaf:"Femme › Vêtements › Robes d'été", price:3200, status:'en_ligne', badges:['COD','NEW'], source:'formulaire', color:'#7aa3c9', colors:[{name:'Bleu',hex:'#7aa3c9',photos:3},{name:'Blanc',hex:'#e8e4dc',photos:2}], skus:[{c:'Bleu',s:'S',stock:8},{c:'Bleu',s:'M',stock:12},{c:'Bleu',s:'L',stock:14},{c:'Bleu',s:'XL',stock:12}] },
@@ -125,7 +481,11 @@
   };
 
   function blankAdd() {
-    return { dept:'Femme', cat:'Vêtements', leaf:null, title:'', titleAr:'', desc:'', attrs:{}, colors:[{name:'Bleu',hex:'#7aa3c9',photos:0},{name:'Rouge',hex:'#d96b6b',photos:0}], sizes:['S','M','L','XL'], stocks:{}, price:'' };
+    return {
+      deptKey: 'women', deptEn: 'Women', path: [], leafId: null, leafEn: null, leafAr: '',
+      catId: null, expanded: {}, treeQ: '', leafQ: '',
+      title:'', titleAr:'', desc:'', attrs:{}, colors:[{name:'Bleu',hex:'#7aa3c9',photos:0},{name:'Rouge',hex:'#d96b6b',photos:0}], sizes:['S','M','L','XL'], stocks:{}, price:''
+    };
   }
 
   const routes = {
@@ -303,43 +663,23 @@
 
   function viewAjouter() {
     const a = S.add;
-    const cats = Object.keys(TREE[a.dept] || {});
-    const leaves = (TREE[a.dept] || {})[a.cat] || [];
+    const path = addPathLabel(a);
     const step1 = `
       <p class="sub">On choisit d’abord la feuille (rayon › catégorie › feuille). Jamais une catégorie parente.</p>
-      <div class="card" style="margin-bottom:12px">
-        <h3>Suggestions d’après votre titre et vos photos</h3>
-        ${SUGGEST.map((s)=>`<button class="btn sm" style="margin:0 6px 6px 0" data-pick-leaf="${esc(s.leaf)}">${esc(s.leaf.split(' › ').pop())} · ${s.pct}%</button>`).join('')}
-      </div>
-      <div class="card">
-        <div class="mu" style="margin-bottom:8px">Sélection : <b>${esc(a.dept)}</b> › ${esc(a.cat || '…')} ${a.leaf? '› <b>'+esc(a.leaf)+'</b>':''}</div>
-        <div class="tree">
-          <div><h4>Département</h4>${Object.keys(TREE).map((d)=>`<button class="${d===a.dept?'on':''}" data-dept="${esc(d)}">${esc(d)}</button>`).join('')}</div>
-          <div><h4>Catégorie</h4>${cats.map((c)=>`<button class="${c===a.cat?'on':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}</div>
-          <div><h4>Feuille</h4>${leaves.map((l)=>`<button class="${l===a.leaf?'on':''}" data-leaf="${esc(l)}">${esc(l)}</button>`).join('') || '<p class="mu" style="padding:12px">Choisissez une catégorie.</p>'}</div>
-        </div>
-        ${a.leaf ? `<div class="card" style="background:var(--ambs);border-color:#f3e0b5;margin-top:12px">
-          <b>Cette feuille exige</b>
-          <ul class="check">
-            <li>• Attributs (liste) : ${(ATTRS[a.leaf]||ATTRS.default) && Object.keys(ATTRS[a.leaf]||ATTRS.default).join(', ')}</li>
-            <li>• Photos 3:4 par couleur · guide des tailles en cm</li>
-            <li>• Stock réel par SKU — vide = inconnu, jamais 0 inventé</li>
-          </ul>
-        </div>` : `<p class="mu" style="margin-top:12px">Aucune feuille choisie — le bouton Continuer reste bloqué.</p>`}
-      </div>
+      ${pickerHtml()}
       <div class="row" style="margin-top:14px">
         <button class="btn" data-save-draft>Enregistrer le brouillon</button>
-        <button class="btn p" data-to-details ${a.leaf?'':'disabled'}>Continuer → Détails & variantes</button>
+        <button class="btn p" data-to-details ${a.leafId?'':'disabled'}>Continuer → Détails & variantes</button>
       </div>`;
 
-    const dict = ATTRS[a.leaf] || ATTRS.default;
+    const dict = ATTRS[a.leafEn] || ATTRS.default;
     const skuRows = a.colors.map((c) => `<tr><td><span class="thumb" style="width:18px;height:18px;background:${c.hex};margin:0 6px 0 0"></span>${esc(c.name)}</td>${a.sizes.map((sz) => {
       const k = c.name+'|'+sz; const v = a.stocks[k];
       return `<td><input class="mini" type="number" min="0" placeholder="?" data-sku="${esc(k)}" value="${v==null||v===''?'':esc(v)}" /></td>`;
     }).join('')}<td class="r">${a.price?da(a.price):'—'}</td></tr>`).join('');
 
     const step2 = `
-      <p class="sub">Feuille : <b>${esc(a.dept)} › ${esc(a.cat)} › ${esc(a.leaf)}</b> · attributs liste, photos 3:4, SKU stock réel (vide = inconnu).</p>
+      <p class="sub">Feuille : <b>${esc(path)}</b> · attributs liste, photos 3:4, SKU stock réel (vide = inconnu).</p>
       <div class="grid2">
         <div>
           <div class="card" style="margin-bottom:12px">
@@ -348,7 +688,7 @@
             <div class="fg"><label class="f">Description</label><textarea id="add-desc" rows="3">${esc(a.desc)}</textarea></div>
           </div>
           <div class="card" style="margin-bottom:12px">
-            <h3>Attributs de la feuille « ${esc(a.leaf)} »</h3>
+            <h3>Attributs de la feuille « ${esc(a.leafEn || '')} »</h3>
             <div class="row">${Object.entries(dict).map(([k,opts]) => `<div class="fg" style="min-width:160px;flex:1"><label class="f">${esc(k)}</label><select data-attr="${esc(k)}"><option value="">— choisir —</option>${opts.map((o)=>`<option ${a.attrs[k]===o?'selected':''}>${esc(o)}</option>`).join('')}</select></div>`).join('')}</div>
           </div>
           <div class="card" style="margin-bottom:12px">
@@ -390,7 +730,7 @@
           <div class="card" style="margin-bottom:12px">
             <h3>Avant de soumettre</h3>
             <ul class="check">
-              <li style="color:var(--a)">● Feuille choisie · ${esc(a.leaf)}</li>
+              <li style="color:var(--a)">● Feuille choisie · ${esc(a.leafEn || '')}</li>
               <li style="color:${a.title.trim().length>=5?'var(--a)':'var(--red)'}">● Titre · ${a.title.trim().length} / 5 car. min</li>
               <li>● Photos · ${sum(a.colors,c=>c.photos)} placées (placeholders 3:4)</li>
               <li>● SKU · ${a.colors.length} × ${a.sizes.length} = ${a.colors.length*a.sizes.length}</li>
@@ -410,7 +750,7 @@
     return `
       <h1>Ajouter un produit</h1>
       <div class="steps">
-        <span class="step ${S.addStep===1?'on':(a.leaf?'done':'')}">1. Feuille</span>
+        <span class="step ${S.addStep===1?'on':(a.leafId?'done':'')}">1. Feuille</span>
         <span class="step ${S.addStep===2?'on':''}">2. Détails & variantes</span>
       </div>
       ${S.addStep===1?step1:step2}`;
@@ -651,6 +991,7 @@
         inp.addEventListener('input', () => { S.pQ = inp.value; render(); const n=$('#pq'); if(n){ n.focus(); n.setSelectionRange(S.pQ.length,S.pQ.length);} });
       }
     }
+    if (r === 'ajouter' && S.addStep === 1) bindTreePicker();
   }
 
   function openDrawer(html) {
@@ -687,7 +1028,7 @@
   }
 
   function onClick(e) {
-    const b = e.target.closest('[data-act],[data-pf],[data-of],[data-open-prod],[data-open-order],[data-sel-order],[data-confirm],[data-call],[data-cancel],[data-dept],[data-cat],[data-leaf],[data-pick-leaf],[data-to-details],[data-back-leaf],[data-save-draft],[data-submit-add],[data-add-color],[data-add-size],[data-photo],[data-fphoto],[data-ftab],[data-send-ctrl],[data-to-fiche],[data-fix],[data-jump-filter],[data-stock],[data-import],[data-reveal],[data-close-drawer],[data-save-shop],.burger,.scrim,.langs button,.drawer');
+    const b = e.target.closest('[data-act],[data-pf],[data-of],[data-open-prod],[data-open-order],[data-sel-order],[data-confirm],[data-call],[data-cancel],[data-expand],[data-dept],[data-cat],[data-leaf],[data-pick-leaf],[data-to-details],[data-back-leaf],[data-save-draft],[data-submit-add],[data-add-color],[data-add-size],[data-photo],[data-fphoto],[data-ftab],[data-send-ctrl],[data-to-fiche],[data-fix],[data-jump-filter],[data-stock],[data-import],[data-reveal],[data-close-drawer],[data-save-shop],.burger,.scrim,.langs button,.drawer');
     if (!b) return;
 
     if (b.classList.contains('burger')) { $('#side').classList.add('on'); $('#scrim').classList.add('on'); return; }
@@ -748,25 +1089,37 @@
     }
     if (b.hasAttribute('data-reveal')) return toast('Numéro masqué en démo : ' + S.orders.find(x=>x.id===b.getAttribute('data-reveal')).phone);
 
-    if (b.hasAttribute('data-dept')) { S.add.dept = b.getAttribute('data-dept'); S.add.cat = Object.keys(TREE[S.add.dept]||{})[0] || ''; S.add.leaf = null; render(); return; }
-    if (b.hasAttribute('data-cat')) { S.add.cat = b.getAttribute('data-cat'); S.add.leaf = null; render(); return; }
-    if (b.hasAttribute('data-leaf')) { S.add.leaf = b.getAttribute('data-leaf'); render(); return; }
+    if (b.hasAttribute('data-expand')) {
+      const id = b.getAttribute('data-expand');
+      S.add.expanded[id] = !S.add.expanded[id];
+      const wrap = b.closest('.picker-br-wrap');
+      const nest = wrap && wrap.querySelector(':scope > .picker-nest');
+      if (nest) nest.hidden = !S.add.expanded[id];
+      b.classList.toggle('open', !!S.add.expanded[id]);
+      return;
+    }
+    if (b.hasAttribute('data-dept')) { selectDept(b.getAttribute('data-dept')); render(); return; }
+    if (b.hasAttribute('data-cat')) { selectCat(b.getAttribute('data-cat')); render(); return; }
+    if (b.hasAttribute('data-leaf')) {
+      if (!selectLeafById(b.getAttribute('data-leaf'))) return toast('Cette entrée n’est pas une feuille.', true);
+      render(); return;
+    }
     if (b.hasAttribute('data-pick-leaf')) {
-      const parts = b.getAttribute('data-pick-leaf').split(' › ');
-      S.add.dept = parts[0]; S.add.cat = parts[1]; S.add.leaf = parts[2]; render(); return;
+      if (!selectLeafById(b.getAttribute('data-pick-leaf'))) return toast('Feuille introuvable dans l’arbre.', true);
+      render(); return;
     }
     if (b.hasAttribute('data-to-details')) {
-      if (!S.add.leaf) { toast('Choisissez d’abord une feuille (pas un parent).', true); return; }
+      if (!S.add.leafId) { toast('Choisissez d’abord une feuille (pas un parent).', true); return; }
       S.addStep = 2; render(); return;
     }
     if (b.hasAttribute('data-back-leaf')) { S.addStep = 1; render(); return; }
     if (b.hasAttribute('data-save-draft')) {
-      if (!S.add.leaf) return toast('Impossible d’enregistrer : aucune feuille choisie.', true);
+      if (!S.add.leafId) return toast('Impossible d’enregistrer : aucune feuille choisie.', true);
       pushDraft(false);
       return;
     }
     if (b.hasAttribute('data-submit-add')) {
-      if (!S.add.leaf) return toast('Feuille obligatoire.', true);
+      if (!S.add.leafId) return toast('Feuille obligatoire.', true);
       if ((S.add.title||'').trim().length < 5) { $('#add-title') && $('#add-title').classList.add('invalid'); return toast('Le titre FR doit faire au moins 5 caractères.', true); }
       pushDraft(true); return;
     }
@@ -817,9 +1170,10 @@
     }));
     const p = {
       id: 'p' + Date.now(),
-      title: a.title.trim() || ('Brouillon · ' + a.leaf),
+      title: a.title.trim() || ('Brouillon · ' + (a.leafEn || 'feuille')),
       titleAr: a.titleAr,
-      leaf: a.dept + ' › ' + a.cat + ' › ' + a.leaf,
+      leaf: addPathLabel(a),
+      leafId: a.leafId,
       price: Number(a.price) || 0,
       status: submit ? 'en_controle' : 'brouillon',
       badges: submit ? [] : [],
@@ -902,5 +1256,6 @@
   window.addEventListener('hashchange', () => { $('#side').classList.remove('on'); $('#scrim').classList.remove('on'); render(); });
 
   if (!location.hash) location.hash = '#/dash';
+  loadCategoryTree();
   render();
 })();
