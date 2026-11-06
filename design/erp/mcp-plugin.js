@@ -656,11 +656,16 @@
   }
 
 
+
   /* Live catalog reads (products API). Never publish. Seller POST /seller/v1/products is not live — local queue only. */
   var PRODUCTS_API = 'https://carvo-products.abdeslam-gh17.workers.dev';
   var FORBIDDEN_WRITE = ['/import/publish', 'import.publish', 'auto.publish', 'POST /import/publish'];
+  var catNameCache = {};
+  var searchTimer = null;
+  var lastSearchQ = '';
+  var catalogLoading = false;
 
-  function titleOf(item, lang) {
+  function titleOf(item) {
     var t = item && item.title;
     if (!t) return '';
     if (typeof t === 'string') return t;
@@ -693,13 +698,15 @@
       colors = [{ name: '—', hex: '#dddddd', photos: Math.min(3, item.images.length) }];
     }
     var hex = (colors[0] && colors[0].hex) || '#dddddd';
+    var catId = item.category || null;
+    var leafLabel = (catId && catNameCache[catId]) || catId || '';
     return {
       id: String(item.id),
       code: item.code || null,
       title: titleOf(item),
       titleAr: titleArOf(item),
-      leaf: item.category || '',
-      leafId: item.category || null,
+      leaf: leafLabel,
+      leafId: catId,
       price: item.price_da != null ? Number(item.price_da) : 0,
       status: 'en_ligne',
       badges: badgesOf(item),
@@ -718,12 +725,10 @@
   function mapDetailOnto(p, detail) {
     if (!p || !detail) return p;
     var colors = (detail.colors || []).map(function (c) {
-      var imgs = 0;
-      if (c.image) imgs = 1;
       return {
         name: c.name || c.value || (c.name_i18n && (c.name_i18n.fr || c.name_i18n.en)) || '—',
         hex: c.hex || '#dddddd',
-        photos: imgs
+        photos: c.image ? 1 : 0
       };
     });
     if (colors.length) {
@@ -739,7 +744,10 @@
     });
     if (detail.size_chart) p.sizeChart = detail.size_chart;
     if (detail.path) p.leaf = Array.isArray(detail.path) ? detail.path.join(' › ') : String(detail.path);
-    else if (detail.category) p.leaf = detail.category;
+    else if (detail.category) {
+      p.leafId = detail.category;
+      p.leaf = catNameCache[detail.category] || detail.category;
+    }
     p.title = titleOf(detail) || p.title;
     p.titleAr = titleArOf(detail) || p.titleAr;
     if (detail.price_da != null) p.price = Number(detail.price_da);
@@ -749,68 +757,165 @@
   }
   function assertNoPublish(url) {
     var u = String(url || '');
-    for (var i = 0; i < FORBIDDEN_WRITE.length; i++) {
+    var i;
+    for (i = 0; i < FORBIDDEN_WRITE.length; i++) {
       if (u.indexOf(FORBIDDEN_WRITE[i]) !== -1) throw new Error('forbidden_publish_path');
     }
+    if (/\/import\/publish/i.test(u)) throw new Error('forbidden_publish_path');
   }
   async function fetchJson(url) {
     assertNoPublish(url);
-    if (/\/import\/publish/i.test(url)) throw new Error('forbidden_publish_path');
     var r = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } });
     if (!r.ok) throw new Error('http_' + r.status);
     return r.json();
   }
-  async function loadCatalogPages(maxPages) {
+  async function resolveCategoryNames(ids) {
+    var missing = [];
+    var i;
+    for (i = 0; i < ids.length; i++) {
+      if (ids[i] && !catNameCache[ids[i]]) missing.push(ids[i]);
+    }
+    missing = missing.filter(function (id, idx, arr) { return arr.indexOf(id) === idx; }).slice(0, 40);
+    await Promise.all(missing.map(async function (id) {
+      try {
+        var node = await fetchJson(PRODUCTS_API + '/v1/categories/' + encodeURIComponent(id));
+        var label = (node.name_i18n && (node.name_i18n.fr || node.name_i18n.en)) || node.name || id;
+        catNameCache[id] = label;
+      } catch (e) {
+        catNameCache[id] = id;
+      }
+    }));
+  }
+  function applyCatNames(items) {
+    return items.map(function (p) {
+      if (p.leafId && catNameCache[p.leafId]) p.leaf = catNameCache[p.leafId];
+      return p;
+    });
+  }
+  async function loadCatalogPages(maxPages, onPage) {
     var items = [];
     var cursor = '0';
     var pages = 0;
     var limit = 40;
-    maxPages = maxPages || 5;
+    maxPages = maxPages || 40;
     while (pages < maxPages) {
       var url = PRODUCTS_API + '/v1/products?offset=' + encodeURIComponent(cursor) + '&limit=' + limit;
       var data = await fetchJson(url);
       var batch = (data && data.items) || [];
-      for (var i = 0; i < batch.length; i++) items.push(mapCard(batch[i]));
+      var mapped = batch.map(mapCard);
+      items = items.concat(mapped);
       pages += 1;
+      if (typeof onPage === 'function') onPage(items.slice(), pages);
       if (!data || !data.next_cursor || !batch.length) break;
       cursor = String(data.next_cursor);
     }
     return { items: items, pages: pages, api: PRODUCTS_API };
   }
+  function waitForData(timeout) {
+    var t0 = Date.now();
+    return new Promise(function (resolve, reject) {
+      (function tick() {
+        var data = window.CARVO_SELLER_DATA;
+        if (data && typeof data.setCatalog === 'function') return resolve(data);
+        if (Date.now() - t0 > (timeout || 8000)) return reject(new Error('no_CARVO_SELLER_DATA'));
+        setTimeout(tick, 50);
+      })();
+    });
+  }
   async function reloadCatalog() {
-    var data = window.CARVO_SELLER_DATA;
-    if (!data || typeof data.setCatalog !== 'function') return null;
+    if (catalogLoading) return null;
+    catalogLoading = true;
     try {
-      var res = await loadCatalogPages(5);
-      data.setCatalog(res.items, {
-        source: 'carvo-products',
-        api: PRODUCTS_API,
-        count: res.items.length,
-        pages: res.pages,
-        sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
+      var data = await waitForData(8000);
+      var res = await loadCatalogPages(40, function (partial) {
+        if (String(lastSearchQ || '').trim()) return; // live search owns the list
+        data.setCatalog(partial, {
+          source: 'carvo-products',
+          api: PRODUCTS_API,
+          count: partial.length,
+          loading: true,
+          sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
+        });
       });
+      var ids = res.items.map(function (p) { return p.leafId; }).filter(Boolean);
+      await resolveCategoryNames(ids);
+      res.items = applyCatNames(res.items);
+      if (!String(lastSearchQ || '').trim()) {
+        data.setCatalog(res.items, {
+          source: 'carvo-products',
+          api: PRODUCTS_API,
+          count: res.items.length,
+          pages: res.pages,
+          loading: false,
+          sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
+        });
+      }
       return res;
     } catch (e) {
-      data.setCatalog([], { source: 'carvo-products', error: String(e && e.message || e), api: PRODUCTS_API });
+      var data2 = window.CARVO_SELLER_DATA;
+      if (data2 && data2.setCatalog) {
+        data2.setCatalog([], { source: 'carvo-products', error: String(e && e.message || e), api: PRODUCTS_API });
+      }
+      return null;
+    } finally {
+      catalogLoading = false;
+    }
+  }
+  async function searchCatalog(q) {
+    var data = window.CARVO_SELLER_DATA;
+    if (!data || typeof data.setCatalog !== 'function') return null;
+    q = String(q || '').trim();
+    if (!q) return reloadCatalog();
+    try {
+      var url = PRODUCTS_API + '/v1/search?q=' + encodeURIComponent(q.slice(0, 80)) + '&limit=40';
+      var raw = await fetchJson(url);
+      var items = ((raw && raw.items) || []).map(mapCard);
+      var ids = items.map(function (p) { return p.leafId; }).filter(Boolean);
+      await resolveCategoryNames(ids);
+      items = applyCatNames(items);
+      data.setCatalog(items, {
+        source: 'carvo-products-search',
+        api: PRODUCTS_API,
+        q: q,
+        count: items.length,
+        sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
+      });
+      return items;
+    } catch (e) {
       return null;
     }
+  }
+  function onProductSearchInput(ev) {
+    var el = ev.target;
+    if (!el || el.id !== 'pq') return;
+    var q = el.value || '';
+    lastSearchQ = q;
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () {
+      if (lastSearchQ !== q) return;
+      if (!String(q).trim()) reloadCatalog();
+      else if (String(q).trim().length >= 2) searchCatalog(q);
+    }, 320);
   }
   async function ensureDetail(id) {
     var data = window.CARVO_SELLER_DATA;
     if (!data || !data.getProducts) return null;
     var list = data.getProducts();
     var p = null;
-    for (var i = 0; i < list.length; i++) {
+    var i;
+    for (i = 0; i < list.length; i++) {
       if (String(list[i].id) === String(id)) { p = list[i]; break; }
     }
     if (!p || p.local || p.detailLoaded) return p;
     var detail = await fetchJson(PRODUCTS_API + '/v1/products/' + encodeURIComponent(id));
+    if (detail.category) await resolveCategoryNames([detail.category]);
     mapDetailOnto(p, detail);
     return p;
   }
   window.CARVO_SELLER_CATALOG = {
     apiBase: PRODUCTS_API,
     reload: reloadCatalog,
+    search: searchCatalog,
     ensureDetail: ensureDetail
   };
 
@@ -829,6 +934,7 @@
       }).observe(nav, { childList: true });
     }
     window.addEventListener('hashchange', function () { setTimeout(sync, 0); });
+    document.addEventListener('input', onProductSearchInput, true);
     setTimeout(sync, 0);
     setTimeout(function () { reloadCatalog(); }, 0);
   }
