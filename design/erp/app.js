@@ -633,13 +633,8 @@
   };
   window.CARVO_SELLER_DATA = {
     apiBase: 'https://carvo-products.abdeslam-gh17.workers.dev',
-<<<<<<< Updated upstream
     sellerContract: 'POST /seller/v1/products — not live (api.carvo.dz unresolved); local en_controle queue labelled to contract',
     sellerApiBase: '',
-=======
-    sellerApi: 'https://api.carvo.dz/seller/v1',
-    sellerContract: 'POST https://api.carvo.dz/seller/v1/products — enqueue on submit; local en_controle if unreachable',
->>>>>>> Stashed changes
     getProducts() { return S.products; },
     getOrders() { return S.orders; },
     setCatalog(liveItems, meta) {
@@ -1400,13 +1395,9 @@
       p.published = false;
       if (p.local) persistLocalProducts();
       if (was !== 'en_controle') bumpQuota();
-<<<<<<< Updated upstream
       if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.enqueueProduct === 'function') {
         window.CARVO_SELLER_CATALOG.enqueueProduct(p, { submit: true });
       }
-=======
-      if (p.local) requestSellerEnqueue(p);
->>>>>>> Stashed changes
       toast(p.title.slice(0, 42) + '… envoyé au contrôle CARVO.');
       render(); return;
     }
@@ -1421,16 +1412,6 @@
       S.set.shop = ($('#shop') && $('#shop').value.trim()) || S.set.shop;
       saveSet(); toast('Boutique enregistrée · ' + S.set.shop); render(); return;
     }
-  }
-
-  function requestSellerEnqueue(p) {
-    if (!p || !p.local) return;
-    if (!window.CARVO_SELLER_CATALOG || typeof window.CARVO_SELLER_CATALOG.enqueue !== 'function') return;
-    window.CARVO_SELLER_CATALOG.enqueue(p).then(function () {
-      persistLocalProducts();
-    }).catch(function () {
-      persistLocalProducts();
-    });
   }
 
   function pushDraft(submit) {
@@ -1467,13 +1448,9 @@
     S.products.unshift(p);
     persistLocalProducts();
     if (submit) bumpQuota();
-<<<<<<< Updated upstream
     if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.enqueueProduct === 'function') {
       window.CARVO_SELLER_CATALOG.enqueueProduct(p, { submit: !!submit });
     }
-=======
-    if (submit) requestSellerEnqueue(p);
->>>>>>> Stashed changes
     S.add = blankAdd();
     S.addStep = 1;
     toast(submit ? 'Produit soumis à la validation CARVO.' : 'Brouillon enregistré dans Produits.');

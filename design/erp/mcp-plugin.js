@@ -657,9 +657,8 @@
 
 
 
-  /* Live catalog reads (products API). Never publish. Seller writes POST /seller/v1/products; local en_controle if unreachable. */
+  /* Live catalog reads (products API). Never publish. Seller POST /seller/v1/products is not live — local queue only. */
   var PRODUCTS_API = 'https://carvo-products.abdeslam-gh17.workers.dev';
-  var SELLER_API = 'https://api.carvo.dz/seller/v1';
   var FORBIDDEN_WRITE = ['/import/publish', 'import.publish', 'auto.publish', 'POST /import/publish'];
   var catNameCache = {};
   var searchTimer = null;
@@ -835,7 +834,7 @@
           api: PRODUCTS_API,
           count: partial.length,
           loading: true,
-          sellerWrite: 'POST /seller/v1/products (contract); local en_controle until API answers'
+          sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
         });
       });
       var ids = res.items.map(function (p) { return p.leafId; }).filter(Boolean);
@@ -848,7 +847,7 @@
           count: res.items.length,
           pages: res.pages,
           loading: false,
-          sellerWrite: 'POST /seller/v1/products (contract); local en_controle until API answers'
+          sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
         });
       }
       return res;
@@ -879,7 +878,7 @@
         api: PRODUCTS_API,
         q: q,
         count: items.length,
-        sellerWrite: 'POST /seller/v1/products (contract); local en_controle until API answers'
+        sellerWrite: 'missing: POST /seller/v1/products (contract only — local en_controle queue)'
       });
       return items;
     } catch (e) {
@@ -913,7 +912,6 @@
     mapDetailOnto(p, detail);
     return p;
   }
-<<<<<<< Updated upstream
 
   function sellerApiBase() {
     var data = window.CARVO_SELLER_DATA;
@@ -1066,166 +1064,16 @@
     }
     if (window.CARVO_SELLER_DATA && window.CARVO_SELLER_DATA.persistLocal) window.CARVO_SELLER_DATA.persistLocal();
     return { ok: true, mode: p.sellerWrite.mode, product: p };
-=======
-  function sellerApiBase() {
-    var data = window.CARVO_SELLER_DATA;
-    if (data && data.sellerApi) return String(data.sellerApi).replace(/\/+$/, '');
-    return SELLER_API;
-  }
-  function newIdemKey() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-    return 'idemp-' + Date.now() + '-' + Math.random().toString(16).slice(2);
-  }
-  function skuCode(ext, color, size) {
-    return String(ext + '-' + (color || 'x') + '-' + (size || 'x')).replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 64);
-  }
-  function measureNum(v) {
-    if (typeof v === 'number' && isFinite(v) && v >= 1 && v <= 300) return v;
-    if (typeof v === 'string' && v.trim() && isFinite(Number(v.replace(',', '.')))) {
-      var n = Number(v.replace(',', '.'));
-      if (n >= 1 && n <= 300) return n;
-    }
-    return null;
-  }
-  function toSellerPayload(p) {
-    var ext = String(p.external_id || p.id || '').slice(0, 64);
-    var leafRaw = p.leafId;
-    var leafId = (leafRaw != null && /^\d+$/.test(String(leafRaw))) ? Number(leafRaw) : leafRaw;
-    var title = { fr: String(p.title || '').trim() || 'Sans titre' };
-    if (p.titleAr && String(p.titleAr).trim()) title.ar = String(p.titleAr).trim();
-    var attrs = {};
-    var src = p.attrs || p.attributes || {};
-    Object.keys(src).forEach(function (k) {
-      var v = src[k];
-      if (Array.isArray(v)) v = v[0];
-      if (v != null && v !== '') attrs[k] = String(v).slice(0, 60);
-    });
-    var price = Math.round(Number(p.price) || 0);
-    var colorsIn = p.colors && p.colors.length ? p.colors : [{ name: '-', hex: p.color || null }];
-    var skusIn = p.skus || [];
-    var colors = colorsIn.map(function (c) {
-      var name = String((c && c.name) || c || '-');
-      var hex = (c && c.hex && /^#[0-9A-Fa-f]{6}$/.test(c.hex)) ? c.hex : null;
-      var images = [];
-      (c && c.images ? c.images : []).forEach(function (u) {
-        if (typeof u === 'string' && /^https:\/\//.test(u)) images.push(u);
-      });
-      var list = skusIn.filter(function (s) { return String(s.c || s.color || '') === name; });
-      if (!list.length && (p.sizes || []).length) {
-        list = (p.sizes || []).map(function (sz) { return { s: sz, stock: null }; });
-      }
-      if (!list.length) list = [{ s: 'U', stock: null }];
-      return {
-        name: name.slice(0, 40),
-        hex: hex,
-        images: images,
-        skus: list.map(function (s) {
-          var stock = s.stock;
-          if (stock === '' || stock === undefined) stock = null;
-          else if (stock != null) {
-            stock = Number(stock);
-            if (!isFinite(stock) || stock < 0) stock = null;
-            else stock = Math.floor(stock);
-          }
-          return {
-            sku_code: skuCode(ext, name, s.s || s.size),
-            size_label: String(s.s || s.size || 'U').slice(0, 16),
-            price_dzd: price,
-            stock: stock
-          };
-        })
-      };
-    });
-    var body = {
-      external_id: ext,
-      leaf_id: leafId,
-      title: title,
-      attributes: attrs,
-      colors: colors,
-      cod: p.cod !== false
-    };
-    if (p.desc && String(p.desc).trim()) body.description = { fr: String(p.desc).replace(/<[^>]*>/g, '').slice(0, 5000) };
-    var chart = p.sizeChart;
-    var rows = chart && (chart.rows || chart.sizes);
-    if (rows && rows.length) {
-      var keyMap = { chest: 'bust_cm', bust: 'bust_cm', waist: 'waist_cm', hip: 'hips_cm', hips: 'hips_cm', length: 'length_cm' };
-      var sizes = [];
-      rows.forEach(function (r) {
-        var label = String(r.size || r.size_label || '').trim();
-        if (!label) return;
-        var measures = {};
-        Object.keys(r).forEach(function (k) {
-          if (k === 'size' || k === 'size_label' || k === 'equivalent') return;
-          var mk = keyMap[k] || (/_cm$/.test(k) ? k : null);
-          var n = measureNum(r[k]);
-          if (mk && n != null) measures[mk] = n;
-        });
-        if (Object.keys(measures).length) sizes.push({ size_label: label.slice(0, 16), measures: measures });
-      });
-      if (sizes.length) body.size_chart = { sizes: sizes };
-    }
-    if (p.source === 'formulaire' || p.source === 'form') body.source = { door: 'form' };
-    return body;
-  }
-  async function enqueueSeller(p) {
-    var result = { ok: false, submitted: true, published: false, queued_local: true };
-    if (!p) return { ok: false, error: 'no_product', submitted: false, published: false };
-    if (!p.local) return { ok: false, error: 'not_local_seller_item', submitted: !!p.submitted, published: false };
-    p.submitted = true;
-    p.published = false;
-    if (p.status !== 'en_controle') p.status = 'en_controle';
-    var url = sellerApiBase() + '/products';
-    assertNoPublish(url);
-    if (/publish/i.test(url)) return { ok: false, error: 'forbidden_publish_path', submitted: true, published: false };
-    var body = toSellerPayload(p);
-    try {
-      var r = await fetch(url, {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json; charset=utf-8',
-          Authorization: 'Bearer anonymous',
-          'Idempotency-Key': newIdemKey()
-        },
-        body: JSON.stringify(body)
-      });
-      var data = null;
-      try { data = await r.json(); } catch (e2) { data = null; }
-      if (r.status === 202 && data && data.results && data.results[0]) {
-        var row = data.results[0];
-        p.external_id = row.external_id || body.external_id;
-        p.sellerVersion = row.version;
-        p.sellerApiStatus = row.status || null;
-        p.submitted = true;
-        p.published = false;
-        p.status = 'en_controle';
-        result = { ok: true, submitted: true, published: false, queued_local: false, status: 'en_controle', external_id: p.external_id, http: 202 };
-      } else {
-        var code = (data && data.errors && data.errors[0] && data.errors[0].code) || ('http_' + r.status);
-        result = { ok: false, submitted: true, published: false, queued_local: true, error: code, http: r.status };
-      }
-    } catch (e) {
-      result = { ok: false, submitted: true, published: false, queued_local: true, error: 'seller_api_unreachable' };
-    }
-    p.sellerEnqueue = result;
-    return result;
->>>>>>> Stashed changes
   }
 
   window.CARVO_SELLER_CATALOG = {
     apiBase: PRODUCTS_API,
-    sellerApi: SELLER_API,
     reload: reloadCatalog,
     search: searchCatalog,
     ensureDetail: ensureDetail,
-<<<<<<< Updated upstream
     toSellerPayload: toSellerPayload,
     enqueueProduct: enqueueProduct,
     sellerApiBase: sellerApiBase
-=======
-    enqueue: enqueueSeller,
-    toSellerPayload: toSellerPayload
->>>>>>> Stashed changes
   };
 
   function boot() {
