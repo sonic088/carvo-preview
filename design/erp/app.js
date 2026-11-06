@@ -641,6 +641,15 @@
       const local = S.products.filter((p) => p && p.local);
       const live = Array.isArray(liveItems) ? liveItems : [];
       const localIds = new Set(local.map((p) => String(p.id)));
+      if (meta && meta.error && !live.length) {
+        const prev = S.products.filter((p) => p && !p.local);
+        if (prev.length) {
+          S.products = local.concat(prev);
+          S.catalogMeta = Object.assign({}, S.catalogMeta || {}, meta);
+          render();
+          return;
+        }
+      }
       S.products = local.concat(live.filter((p) => p && !localIds.has(String(p.id))));
       S.catalogMeta = meta || {};
       if (!S.ficheId || !S.products.some((p) => String(p.id) === String(S.ficheId))) {
@@ -787,9 +796,12 @@
   function filteredProducts() {
     let list = S.products.slice();
     if (S.pFilter !== 'tous') list = list.filter((p) => p.status === S.pFilter);
-    if (S.pQ) {
+    const apiQ = S.catalogMeta && S.catalogMeta.q;
+    if (S.pQ && !(apiQ && String(apiQ) === String(S.pQ))) {
       const q = S.pQ.toLowerCase();
-      list = list.filter((p) => (p.title + p.leaf + p.id).toLowerCase().includes(q) || (p.skus||[]).some((s)=> (s.c+' '+s.s).toLowerCase().includes(q)));
+      list = list.filter((p) => (
+        (p.title || '') + ' ' + (p.titleAr || '') + ' ' + (p.leaf || '') + ' ' + (p.id || '') + ' ' + (p.code || '') + ' ' + (p.source || '')
+      ).toLowerCase().includes(q) || (p.skus||[]).some((s)=> (String(s.c||'')+' '+String(s.s||'')+' '+String(s.sku_code||'')).toLowerCase().includes(q)));
     }
     if (S.pSort.k === 'price') list.sort((a,b) => (a.price-b.price)*S.pSort.d);
     if (S.pSort.k === 'stock') list.sort((a,b) => ((stockOf(a)??-1)-(stockOf(b)??-1))*S.pSort.d);
@@ -1086,7 +1098,7 @@
     if (!p) return '';
     S.ficheId = p.id;
     if (window.CARVO_SELLER_CATALOG && window.CARVO_SELLER_CATALOG.ensureDetail && !p.detailLoaded && !p.local) {
-      window.CARVO_SELLER_CATALOG.ensureDetail(p.id);
+      window.CARVO_SELLER_CATALOG.ensureDetail(p.id).then(function () { render(); }).catch(function () {});
     }
     const tabs = [['infos','Informations'],['couleurs','Couleurs & photos'],['sku','SKU & stock'],['guide','Guide des tailles'],['apercu','Aperçu'],['controle','Contrôle']];
     const photosOk = (p.colors||[]).every((c)=>c.photos>=1);
@@ -1182,6 +1194,9 @@
       const inp = $('#pq');
       if (inp) {
         inp.addEventListener('input', () => { S.pQ = inp.value; render(); const n=$('#pq'); if(n){ n.focus(); n.setSelectionRange(S.pQ.length,S.pQ.length);} });
+      }
+      if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.reload === 'function' && !S.catalogMeta) {
+        window.CARVO_SELLER_CATALOG.reload();
       }
     }
     if (r === 'ajouter') loadLeafAttrs();
