@@ -4,7 +4,7 @@
 
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
-  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({'&':'&'+'amp;','<':'&'+'lt;','>':'&'+'gt;','"':'&'+'quot;',"'":'&'+'#39;'}[c]));
   const da = (n) => (n == null || n === '' ? '—' : Number(n).toLocaleString('fr-FR') + ' DA');
   const sum = (a, fn) => a.reduce((s, x) => s + (fn ? fn(x) : x), 0);
   const stockOf = (p) => {
@@ -517,30 +517,9 @@
       </div>` : `<p class="mu" style="margin-top:12px">Aucune feuille choisie — le bouton Continuer reste bloqué.</p>`}`;
   }
 
-  const seedProducts = () => [
-    { id:'p1', title:'Lina Coton Bleu Fleuri Robe d’été longue', titleAr:'لينا قطن أزرق مورّد فستان صيفي طويل', leaf:"Femme › Vêtements › Robes d'été", price:3200, status:'en_ligne', badges:['COD','NEW'], source:'formulaire', color:'#7aa3c9', colors:[{name:'Bleu',hex:'#7aa3c9',photos:3},{name:'Blanc',hex:'#e8e4dc',photos:2}], skus:[{c:'Bleu',s:'S',stock:8},{c:'Bleu',s:'M',stock:12},{c:'Bleu',s:'L',stock:14},{c:'Bleu',s:'XL',stock:12}] },
-    { id:'p2', title:'Lina Satin Noir Uni Robe de soirée longue', titleAr:'فستان سهرة ساتان أسود', leaf:'Femme › Vêtements › Robes de soirée', price:6900, status:'refuse', badges:[], source:'formulaire', color:'#1f1f1f', refuse:'Catégorie incorrecte → CARVO propose Robes › Robes de soirée', colors:[{name:'Noir',hex:'#1f1f1f',photos:2}], skus:[{c:'Noir',s:'S',stock:3},{c:'Noir',s:'M',stock:5},{c:'Noir',s:'L',stock:4}] },
-    { id:'p3', title:'Lina Cuir Doré Uni Sandales plates', titleAr:'صندل جلد ذهبي مسطح', leaf:'Chaussures › Femme › Sandales plates', price:2400, status:'en_ligne', badges:['COD','Low stock'], source:'import 1688', color:'#e6c878', colors:[{name:'Doré',hex:'#e6c878',photos:3}], skus:[{c:'Doré',s:'36',stock:0},{c:'Doré',s:'37',stock:1},{c:'Doré',s:'38',stock:1},{c:'Doré',s:'39',stock:0}] },
-    { id:'p4', title:'Lina Viscose Rouge Fleuri Robe d’été midi', titleAr:'فستان صيفي فيسكوز أحمر مورّد', leaf:"Femme › Vêtements › Robes d'été", price:3400, status:'brouillon', badges:[], source:'formulaire', color:'#e8b4b4', colors:[{name:'Rouge',hex:'#d96b6b',photos:1},{name:'Bleu',hex:'#7aa3c9',photos:0}], skus:[{c:'Rouge',s:'S',stock:null},{c:'Rouge',s:'M',stock:9},{c:'Rouge',s:'L',stock:null},{c:'Bleu',s:'S',stock:8},{c:'Bleu',s:'M',stock:12},{c:'Bleu',s:'L',stock:10}] },
-    { id:'p5', title:'Lina Lin Beige Uni Ensemble deux pièces', titleAr:'طقم كتّان بيج قطعتين', leaf:'Femme › Vêtements › Ensembles · Deux pièces', price:4800, status:'en_controle', badges:['COD','Trends #lin'], source:'Excel', color:'#d9c7a8', colors:[{name:'Beige',hex:'#d9c7a8',photos:3}], skus:[{c:'Beige',s:'S',stock:7},{c:'Beige',s:'M',stock:10},{c:'Beige',s:'L',stock:8},{c:'Beige',s:'XL',stock:6}] },
-    { id:'p6', title:'Lina Similicuir Camel Uni Sac bandoulière', titleAr:'حقيبة كتف جلد صناعي جملي', leaf:'Sacs & bagages › Femme › Sacs bandoulière', price:2150, status:'masque', badges:['COD','HOT #3'], source:'import 1688', color:'#c49a6c', colors:[{name:'Camel',hex:'#c49a6c',photos:2}], skus:[{c:'Camel',s:'Unique',stock:null}] },
-    { id:'p7', title:'Lina Coton Blanc Uni Chemiser oversize', titleAr:'قميص قطن أبيض واسع', leaf:'Femme › Vêtements › Chemisiers', price:2900, status:'en_ligne', badges:['NEW'], source:'formulaire', color:'#f3efe6', colors:[{name:'Blanc',hex:'#f3efe6',photos:3},{name:'Noir',hex:'#222',photos:3}], skus:[{c:'Blanc',s:'S',stock:4},{c:'Blanc',s:'M',stock:6},{c:'Blanc',s:'L',stock:5},{c:'Noir',s:'S',stock:3},{c:'Noir',s:'M',stock:5},{c:'Noir',s:'L',stock:2}] },
-    { id:'p8', title:'Lina Viscose Vert Sauge Robe midi plissée col V', titleAr:'فستان متوسط طيات أخضر حكيم', leaf:"Femme › Vêtements › Robes d'été", price:3900, status:'en_controle', badges:['1688'], source:'import 1688', color:'#7d9b7a', colors:[{name:'Vert sauge',hex:'#7d9b7a',photos:3},{name:'Noir',hex:'#222',photos:3}], skus:[{c:'Vert sauge',s:'S',stock:null},{c:'Vert sauge',s:'M',stock:null},{c:'Vert sauge',s:'L',stock:null},{c:'Noir',s:'S',stock:null},{c:'Noir',s:'M',stock:null},{c:'Noir',s:'L',stock:null}] }
-  ];
+  const seedProducts = () => [];
 
-  const seedOrders = () => [
-    { id:'CV-10482', client:'Amina Benali', short:'Amina B.', phone:'05 •• •• •• 41', wilaya:'Alger · Bab Ezzouar', ship:'Domicile · 600 DA', items:[{n:'Robe d’été longue fleurie bleue',d:'Bleu · M · SKU LIN-RB-BL-M',p:3200,c:'#7aa3c9'},{n:'Sac bandoulière camel',d:'Unique · SKU LIN-SAC-CM',p:2100,c:'#c49a6c'}], total:5900, shipFee:600, status:'a_confirmer', delay:'à appeler avant 18 h', when:'aujourd’hui 10:42', note:'', risk:'' },
-    { id:'CV-10481', client:'Nour Hamidi', short:'Nour H.', phone:'07 •• •• •• 19', wilaya:'Oran · Bir El Djir', ship:'Stop desk · 350 DA', items:[{n:'Robe d’été longue fleurie bleue',d:'Blanc · L',p:3200,c:'#e8e4dc'}], total:3200, shipFee:350, status:'a_confirmer', delay:'à appeler avant 16 h', when:'aujourd’hui 10:15', note:'', risk:'' },
-    { id:'CV-10480', client:'Yasmine Kaci', short:'Yasmine K.', phone:'05 •• •• •• 73', wilaya:'Tizi Ouzou · Azazga', ship:'Domicile · 700 DA', items:[{n:'Ensemble lin beige',d:'Beige · M',p:4800,c:'#d9c7a8'}], total:4100, shipFee:700, status:'a_confirmer', delay:'risque · vérifier', when:'hier 21:30', note:'', risk:'2 refus de colis' },
-    { id:'CV-10479', client:'Sarah Khelifi', short:'Sarah K.', phone:'06 •• •• •• 22', wilaya:'Sétif · Sétif', ship:'Domicile · 500 DA', items:[{n:'Robe midi plissée',d:'Vert sauge · M',p:3900,c:'#7d9b7a'},{n:'Sandales plates',d:'Doré · 38',p:2400,c:'#e6c878'},{n:'Chemiser oversize',d:'Blanc · M',p:2900,c:'#f3efe6'}], total:9750, shipFee:500, status:'confirmee', delay:'', when:'hier 18:02', note:'OK après 16 h', risk:'' },
-    { id:'CV-10478', client:'Meriem Djoudi', short:'Meriem D.', phone:'05 •• •• •• 68', wilaya:'Annaba · El Bouni', ship:'Stop desk · 400 DA', items:[{n:'Robe de soirée noire',d:'Noir · M',p:6900,c:'#1f1f1f'},{n:'Sac camel',d:'Unique',p:2150,c:'#c49a6c'}], total:11300, shipFee:400, status:'a_confirmer', delay:'2ᵉ appel', when:'hier 16:40', note:'', risk:'' },
-    { id:'CV-10477', client:'Khadidja Saadi', short:'Khadidja S.', phone:'07 •• •• •• 12', wilaya:'Béjaïa · Akbou', ship:'Domicile · 550 DA', items:[{n:'Robe d’été bleue',d:'Bleu · S',p:3200,c:'#7aa3c9'}], total:2400, shipFee:550, status:'a_confirmer', delay:'injoignable 1×', when:'hier 15:05', note:'', risk:'' },
-    { id:'CV-10475', client:'Ikram Meziane', short:'Ikram M.', phone:'05 •• •• •• 90', wilaya:'Blida · Boufarik', ship:'Domicile · 450 DA', items:[{n:'Sandales plates',d:'Doré · 37',p:2400,c:'#e6c878'}], total:2400, shipFee:450, status:'expediee', delay:'', when:'4 nov. 14:10', note:'', risk:'' },
-    { id:'CV-10471', client:'Lydia Toumi', short:'Lydia T.', phone:'06 •• •• •• 33', wilaya:'Constantine · El Khroub', ship:'Domicile · 650 DA', items:[{n:'Robe d’été bleue',d:'Bleu · L',p:3200,c:'#7aa3c9'},{n:'Chemiser',d:'Noir · M',p:2900,c:'#222'}], total:6100, shipFee:650, status:'livree', delay:'', when:'3 nov. 11:20', note:'', risk:'' },
-    { id:'CV-10458', client:'Sara Bensalem', short:'Sara B.', phone:'05 •• •• •• 11', wilaya:'Alger · Hydra', ship:'Domicile · 600 DA', items:[{n:'Sac camel',d:'Unique',p:2150,c:'#c49a6c'}], total:3200, shipFee:600, status:'livree', delay:'', when:'3 nov.', note:'', risk:'' },
-    { id:'CV-10492', client:'Ines Cherif', short:'Ines C.', phone:'07 •• •• •• 44', wilaya:'Oran · Es Senia', ship:'Stop desk · 350 DA', items:[{n:'Ensemble lin',d:'Beige · L',p:4800,c:'#d9c7a8'}], total:9750, shipFee:350, status:'livree', delay:'', when:'2 nov.', note:'', risk:'' },
-    { id:'CV-10450', client:'Rania Mebarki', short:'Rania M.', phone:'05 •• •• •• 77', wilaya:'Batna', ship:'Domicile · 700 DA', items:[{n:'Robe soirée',d:'Noir · S',p:6900,c:'#1f1f1f'}], total:2400, shipFee:700, status:'retour', delay:'', when:'2 nov.', note:'colis refusé', risk:'' }
-  ];
+  const seedOrders = () => [];
 
   const RELEVES = [
     { p:'1–7 nov. 2026', colis:27, ventes:142300, retours:4100, com:11050, liv:14750, net:112400, st:'en_cours', lab:'En cours · cash en remontée' },
@@ -585,26 +564,113 @@
   };
   const saveSet = () => localStorage.setItem(KEY, JSON.stringify(S.set));
 
+
+  const QUEUE_KEY = 'carvo.sellerErp.queue.v1';
+  const QUOTA_KEY = 'carvo.sellerErp.quota.v1';
+  const MONTHLY_QUOTA = 500;
+  function loadQueue() {
+    try { const q = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]'); return Array.isArray(q) ? q : []; }
+    catch { return []; }
+  }
+  function saveQueue(list) {
+    localStorage.setItem(QUEUE_KEY, JSON.stringify(list || []));
+  }
+  function persistLocalProducts() {
+    saveQueue(S.products.filter((p) => p && p.local));
+  }
+  function monthKey(d) {
+    const x = d || new Date();
+    return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0');
+  }
+  function quotaUsed() {
+    try { const o = JSON.parse(localStorage.getItem(QUOTA_KEY) || '{}'); return Number(o[monthKey()] || 0); }
+    catch { return 0; }
+  }
+  function bumpQuota() {
+    let o = {};
+    try { o = JSON.parse(localStorage.getItem(QUOTA_KEY) || '{}') || {}; } catch { o = {}; }
+    const k = monthKey();
+    o[k] = Number(o[k] || 0) + 1;
+    localStorage.setItem(QUOTA_KEY, JSON.stringify(o));
+  }
+
   const S = {
-    products: seedProducts(),
+    products: loadQueue().concat(seedProducts()),
     orders: seedOrders(),
     set: loadSet(),
     pFilter: 'tous',
     pQ: '',
     pSort: { k: null, d: 1 },
     oFilter: 'a_confirmer',
-    oId: 'CV-10482',
+    oId: null,
     addStep: 1,
     add: blankAdd(),
     ficheTab: 'infos',
-    ficheId: 'p8'
+    ficheId: null
+  };
+
+  const GUIDE_KEYS = ['chest','waist','hip','length'];
+  function guideRows(a) {
+    return (a.sizes || []).map((sz) => {
+      const row = { size: sz };
+      GUIDE_KEYS.forEach((k) => {
+        const raw = String((a.guide || {})[sz+'|'+k] ?? '').trim();
+        const m = raw.match(/^(\d+(?:[.,]\d+)?)\s*-\s*(\d+(?:[.,]\d+)?)$/);
+        if (m) row[k] = [Number(m[1].replace(',','.')), Number(m[2].replace(',','.'))];
+        else if (raw !== '' && isFinite(Number(raw.replace(',','.')))) row[k] = Number(raw.replace(',','.'));
+      });
+      return row;
+    }).filter((r) => Object.keys(r).length > 1);
+  }
+  window.CARVO_SELLER_ADD = {
+    setVariants(colors, sizes) {
+      S.add.colors = (colors || []).map((c) => ({ name: String(c.name || c), hex: c.hex || '#dddddd', photos: 0 }));
+      S.add.sizes = (sizes || []).map(String);
+      S.add.stocks = {};
+      S.add.guide = {};
+      render();
+    }
+  };
+  window.CARVO_SELLER_DATA = {
+    apiBase: 'https://carvo-products.abdeslam-gh17.workers.dev',
+    sellerContract: 'POST /seller/v1/products — not live (api.carvo.dz unresolved); local en_controle queue labelled to contract',
+    sellerApiBase: '',
+    getProducts() { return S.products; },
+    getOrders() { return S.orders; },
+    setCatalog(liveItems, meta) {
+      const local = S.products.filter((p) => p && p.local);
+      const live = Array.isArray(liveItems) ? liveItems : [];
+      const localIds = new Set(local.map((p) => String(p.id)));
+      S.products = local.concat(live.filter((p) => p && !localIds.has(String(p.id))));
+      S.catalogMeta = meta || {};
+      if (!S.ficheId || !S.products.some((p) => String(p.id) === String(S.ficheId))) {
+        S.ficheId = S.products.length ? S.products[0].id : null;
+      }
+      render();
+    },
+    setOrders(list) {
+      S.orders = Array.isArray(list) ? list : [];
+      if (!S.oId || !S.orders.some((o) => o.id === S.oId)) S.oId = S.orders.length ? S.orders[0].id : null;
+      render();
+    },
+    upsertLocal(p) {
+      if (!p || p.id == null) return;
+      p.local = true;
+      const i = S.products.findIndex((x) => String(x.id) === String(p.id));
+      if (i >= 0) S.products[i] = p; else S.products.unshift(p);
+      persistLocalProducts();
+      render();
+    },
+    persistLocal: persistLocalProducts,
+    quotaUsed,
+    monthlyQuota: MONTHLY_QUOTA
   };
 
   function blankAdd() {
     return {
       deptKey: 'women', deptEn: 'Women', path: [], leafId: null, leafEn: null, leafAr: '',
       catId: null, expanded: {}, treeQ: '', leafQ: '',
-      title:'', titleAr:'', desc:'', attrs:{}, colors:[{name:'Bleu',hex:'#7aa3c9',photos:0},{name:'Rouge',hex:'#d96b6b',photos:0}], sizes:['S','M','L','XL'], stocks:{}, price:''
+      title:'', titleAr:'', desc:'', attrs:{}, colors:[{name:'Bleu',hex:'#7aa3c9',photos:0},{name:'Rouge',hex:'#d96b6b',photos:0}], sizes:['S','M','L','XL'], stocks:{}, guide:{}, price:''
     };
   }
 
@@ -839,10 +905,7 @@
             <div class="tw"><table>
               <thead><tr><th>Taille</th><th>Poitrine</th><th>Taille</th><th>Hanches</th><th>Longueur</th></tr></thead>
               <tbody>
-                <tr><td>S</td><td><input class="mini" value="86"></td><td><input class="mini" value="68"></td><td><input class="mini" value="92"></td><td><input class="mini" value="112"></td></tr>
-                <tr><td>M</td><td><input class="mini" value="90"></td><td><input class="mini" value="72"></td><td><input class="mini" value="96"></td><td><input class="mini" value="113"></td></tr>
-                <tr><td>L</td><td><input class="mini" value="94"></td><td><input class="mini" value="76"></td><td><input class="mini" value="100"></td><td><input class="mini" value="114"></td></tr>
-                <tr><td>XL</td><td><input class="mini" value="98"></td><td><input class="mini" value="80"></td><td><input class="mini" value="104"></td><td><input class="mini" value="115"></td></tr>
+                ${a.sizes.map((sz)=>`<tr><td>${esc(sz)}</td>${GUIDE_KEYS.map((k)=>{ const v=(a.guide||{})[sz+'|'+k]; return `<td><input class="mini" placeholder="?" data-guide="${esc(sz+'|'+k)}" value="${v==null?'':esc(v)}"></td>`; }).join('')}</tr>`).join('')}
               </tbody>
             </table></div>
           </div>
@@ -1020,7 +1083,11 @@
 
   function viewFiche() {
     const p = S.products.find((x)=>x.id===S.ficheId) || S.products[0];
+    if (!p) return '';
     S.ficheId = p.id;
+    if (window.CARVO_SELLER_CATALOG && window.CARVO_SELLER_CATALOG.ensureDetail && !p.detailLoaded && !p.local) {
+      window.CARVO_SELLER_CATALOG.ensureDetail(p.id);
+    }
     const tabs = [['infos','Informations'],['couleurs','Couleurs & photos'],['sku','SKU & stock'],['guide','Guide des tailles'],['apercu','Aperçu'],['controle','Contrôle']];
     const photosOk = (p.colors||[]).every((c)=>c.photos>=1);
     const titleOk = (p.title||'').length>=5;
@@ -1130,6 +1197,16 @@
   function showProduct(id) {
     const p = S.products.find((x)=>x.id===id);
     if (!p) return;
+    if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.ensureDetail === 'function') {
+      window.CARVO_SELLER_CATALOG.ensureDetail(id).then(function () {
+        const p2 = S.products.find((x)=>x.id===id);
+        if (p2) showProductDraw(p2);
+      }).catch(function () { showProductDraw(p); });
+      return;
+    }
+    showProductDraw(p);
+  }
+  function showProductDraw(p) {
     openDrawer(`
       <h2 style="margin:0 40px 6px 0;font-size:18px">${esc(p.title)}</h2>
       <p>${chipP(p.status)} · ${esc(p.leaf)} · ${da(p.price)}</p>
@@ -1308,11 +1385,29 @@
     if (b.hasAttribute('data-ftab')) { S.ficheTab = b.getAttribute('data-ftab'); render(); return; }
     if (b.hasAttribute('data-send-ctrl')) {
       const p = S.products.find((x)=>x.id===b.getAttribute('data-send-ctrl'));
+      if (!p) return;
+      if (p.status !== 'en_controle' && quotaUsed() >= MONTHLY_QUOTA) {
+        return toast('Quota mensuel atteint (' + MONTHLY_QUOTA + '/mois). Motif: QUOTA_EXCEEDED.', true);
+      }
+      const was = p.status;
       p.status = 'en_controle';
+      p.submitted = true;
+      p.published = false;
+      if (p.local) persistLocalProducts();
+      if (was !== 'en_controle') bumpQuota();
+      if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.enqueueProduct === 'function') {
+        window.CARVO_SELLER_CATALOG.enqueueProduct(p, { submit: true });
+      }
       toast(p.title.slice(0, 42) + '… envoyé au contrôle CARVO.');
       render(); return;
     }
-    if (b.hasAttribute('data-to-fiche')) { S.ficheId = b.getAttribute('data-to-fiche'); closeDrawer(); }
+    if (b.hasAttribute('data-to-fiche')) {
+      S.ficheId = b.getAttribute('data-to-fiche');
+      closeDrawer();
+      if (window.CARVO_SELLER_CATALOG && window.CARVO_SELLER_CATALOG.ensureDetail) {
+        window.CARVO_SELLER_CATALOG.ensureDetail(S.ficheId).finally(function () { render(); });
+      }
+    }
     if (b.hasAttribute('data-save-shop')) {
       S.set.shop = ($('#shop') && $('#shop').value.trim()) || S.set.shop;
       saveSet(); toast('Boutique enregistrée · ' + S.set.shop); render(); return;
@@ -1321,6 +1416,9 @@
 
   function pushDraft(submit) {
     grabAddFields();
+    if (submit && quotaUsed() >= MONTHLY_QUOTA) {
+      return toast('Quota mensuel atteint (' + MONTHLY_QUOTA + '/mois). Motif: QUOTA_EXCEEDED.', true);
+    }
     const a = S.add;
     const skus = [];
     a.colors.forEach((c) => a.sizes.forEach((sz) => {
@@ -1335,14 +1433,24 @@
       leafId: a.leafId,
       price: Number(a.price) || 0,
       status: submit ? 'en_controle' : 'brouillon',
+      submitted: !!submit,
+      published: false,
       badges: submit ? [] : [],
       source: 'formulaire',
-      color: a.colors[0].hex,
+      color: (a.colors[0] || {}).hex || '#dddddd',
+      sizeChart: { unit: 'cm', columns: ['size'].concat(GUIDE_KEYS), rows: guideRows(a) },
       colors: a.colors.map((c)=>({...c})),
       attrs: JSON.parse(JSON.stringify(a.attrs || {})),
-      skus
+      desc: a.desc || '',
+      skus,
+      local: true
     };
     S.products.unshift(p);
+    persistLocalProducts();
+    if (submit) bumpQuota();
+    if (window.CARVO_SELLER_CATALOG && typeof window.CARVO_SELLER_CATALOG.enqueueProduct === 'function') {
+      window.CARVO_SELLER_CATALOG.enqueueProduct(p, { submit: !!submit });
+    }
     S.add = blankAdd();
     S.addStep = 1;
     toast(submit ? 'Produit soumis à la validation CARVO.' : 'Brouillon enregistré dans Produits.');
@@ -1357,12 +1465,14 @@
     const price = $('#add-price'); if (price) S.add.price = price.value;
     $$('[data-attr]').forEach((el) => { S.add.attrs[el.getAttribute('data-attr')] = el.value; });
     $$('[data-sku]').forEach((el) => { S.add.stocks[el.getAttribute('data-sku')] = el.value; });
+    $$('[data-guide]').forEach((el) => { S.add.guide = S.add.guide || {}; S.add.guide[el.getAttribute('data-guide')] = el.value; });
   }
 
   function onInput(e) {
     const el = e.target;
     if (el.id === 'add-title' || el.id === 'add-titleAr' || el.id === 'add-desc' || el.id === 'add-price') grabAddFields();
     if (el.hasAttribute('data-sku')) S.add.stocks[el.getAttribute('data-sku')] = el.value;
+    if (el.hasAttribute('data-guide')) { S.add.guide = S.add.guide || {}; S.add.guide[el.getAttribute('data-guide')] = el.value; }
     if (el.hasAttribute('data-attr')) S.add.attrs[el.getAttribute('data-attr')] = el.value;
     if (el.hasAttribute('data-attr-q')) {
       const q = el.value.trim().toLowerCase();
@@ -1406,7 +1516,14 @@
       S.set[el.getAttribute('data-n')] = el.checked;
       saveSet();
     }
-    if (el.id === 'fiche-pick') { S.ficheId = el.value; render(); }
+    if (el.id === 'fiche-pick') {
+      S.ficheId = el.value;
+      if (window.CARVO_SELLER_CATALOG && window.CARVO_SELLER_CATALOG.ensureDetail) {
+        window.CARVO_SELLER_CATALOG.ensureDetail(S.ficheId).finally(function () { render(); });
+        return;
+      }
+      render();
+    }
     if (el.hasAttribute('data-attr')) S.add.attrs[el.getAttribute('data-attr')] = el.value;
   }
 
@@ -1423,7 +1540,7 @@
   document.addEventListener('change', onChange);
   document.addEventListener('click', onSort);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
-  window.addEventListener('hashchange', () => { $('#side').classList.remove('on'); $('#scrim').classList.remove('on'); render(); });
+  window.addEventListener('hashchange', () => { const sd = $('#side'); if (sd) sd.classList.remove('on'); const sc = $('#scrim'); if (sc) sc.classList.remove('on'); render(); });
 
   if (!location.hash) location.hash = '#/dash';
   loadCategoryTree();

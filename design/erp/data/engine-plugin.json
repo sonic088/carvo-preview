@@ -1,0 +1,35 @@
+{
+  "name": "carvo-import-engine",
+  "title": "Moteur d'import CARVO",
+  "version": "1",
+  "independent": true,
+  "protocol": "2024-11-05",
+  "description": "Plugin MCP. The import engine stays independent (import 1688, measurements, D-034). When plugged into Seller ERP it can arrange products and read real leaf attributes. It does not publish, start a platform crawl, or expose Daigou secrets.",
+  "tools": [
+    {
+      "name": "import_placement",
+      "description": "ai_place policy: two voices, min_confidence 0.8, otherwise keep_review. invents_leaf is false."
+    },
+    {
+      "name": "read_measurements",
+      "description": "Read real leaf attribute groups from leaf-attrs.json (supplier_template captures). Does not invent values or fill the size guide."
+    },
+    {
+      "name": "arrange_product",
+      "description": "Drive Seller ERP Ajouter: open the suggested leaf at or above 0.8 and continue to details."
+    },
+    {
+      "name": "import_status",
+      "description": "Read-only: import remains on the independent engine (D-034). Does not start an import."
+    }
+  ],
+  "forbidden": [
+    "import_publish",
+    "publish",
+    "import_start",
+    "import_secrets",
+    "daigou-token",
+    "daigou-login",
+    "engines_health"
+  ]
+}

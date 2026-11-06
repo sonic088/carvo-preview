@@ -1,35 +1,29 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>CARVO — Seller ERP (app interactive)</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="app.css?v=3" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CARVO — ERP Vendeur</title>
+  <link rel="stylesheet" href="app.css?v=3">
+  <link rel="stylesheet" href="mcp-plugin.css?v=1">
 </head>
 <body>
-<div class="shell">
-  <aside id="side">
-    <div class="logo"><span class="mark">C</span><div><b>CARVO</b><small>Seller Center</small></div></div>
-    <div class="shop">Boutique Lina<small>Vendeur de confiance · id 0042</small></div>
-    <nav id="nav"></nav>
-    <div class="side-foot">
-      <div class="langs"><button class="on">FR</button><button>AR</button><button>EN</button></div>
-      <a href="../dossier/">Dossier de conception</a>
-      <a href="https://sonic088.github.io/carvo-preview/test/" target="_blank" rel="noopener">App CARVO ↗</a>
-      <small>Démo · données d'exemple</small>
-    </div>
-  </aside>
-  <div class="scrim" id="scrim"></div>
-  <main>
-    <header class="topbar"><button class="burger" id="burger" aria-label="Menu">☰</button><span id="crumb"></span><span class="demo">DÉMO</span></header>
-    <div id="view"></div>
-  </main>
-</div>
-<div class="drawer" id="drawer"><div class="drawer-in" id="drawerIn"></div></div>
-<div class="toasts" id="toasts"></div>
-<script src="app.js?v=3"></script>
+  <div id="app">
+    <aside id="nav"></aside>
+    <main>
+      <header class="top">
+        <div class="crumbs" id="crumb">Seller Center</div>
+        <div class="lang">
+          <button type="button" data-lang="fr">FR</button>
+          <button type="button" data-lang="ar">ع</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+      </header>
+      <div id="view"></div>
+    </main>
+  </div>
+  <div id="toasts"></div>
+  <script src="app.js?v=6"></script>
+  <script src="mcp-plugin.js?v=6"></script>
 </body>
 </html>
