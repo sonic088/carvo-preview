@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>
+:root{--rush:#FFD31A;--rush-ink:#1A1A1A;--hot:#E3241B;--hot-ink:#FFF;--r:6px}
+body{margin:0;background:#F4F4F4;font-family:Inter,"Noto Sans Arabic",system-ui,sans-serif;padding:16px;width:560px}
+h3{font-size:13px;margin:0 0 8px;color:#222;font-weight:700}
+.row{display:flex;gap:8px;margin-bottom:16px}
+.card{width:170px;background:#fff;border-radius:var(--r);overflow:hidden}
+.ph{position:relative;height:227px;background:linear-gradient(160deg,#E9E4DC,#D8D0C4)}
+.bar{position:absolute;left:0;right:0;bottom:0;height:20px;display:flex;align-items:center;justify-content:space-between;padding:0 6px;box-sizing:border-box;font-size:10px;line-height:1;white-space:nowrap}
+.bar .l{display:flex;align-items:center;gap:4px;font-weight:800;letter-spacing:.2px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.bar .v{font-weight:600;font-variant-numeric:tabular-nums;flex:none}
+.rush{background:var(--rush);color:var(--rush-ink)}
+.hot{background:var(--hot);color:var(--hot-ink)}
+svg{width:12px;height:12px;flex:none}
+.info{padding:6px 7px 8px;font-size:12px;color:#222}
+.p{font-weight:700;font-size:15px;margin-top:3px}
+[dir=rtl] .bar .l{letter-spacing:0}
+</style></head><body>
+<h3>LTR</h3>
+<div class="row">
+ <div class="card"><div class="ph"><div class="bar rush"><span class="l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>CARVO Rush</span><span class="v">02:14:33</span></div></div><div class="info">Floral Mini Dress<div class="p">DA2,390</div></div></div>
+ <div class="card"><div class="ph"><div class="bar hot"><span class="l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/></svg>HOT SELLER</span><span class="v">1.5k+ sold</span></div></div><div class="info">Wide Leg Jeans<div class="p">DA3,290</div></div></div>
+ <div class="card"><div class="ph"></div><div class="info">Sans barre<div class="p">DA2,790</div></div></div>
+</div>
+<h3>RTL</h3>
+<div class="row" dir="rtl">
+ <div class="card"><div class="ph"><div class="bar rush"><span class="l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>CARVO Rush</span><span class="v" dir="ltr">02:14:33</span></div></div><div class="info">فستان قصير<div class="p">2,390 دج</div></div></div>
+ <div class="card"><div class="ph"><div class="bar hot"><span class="l"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2s5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5 1-8.5z"/></svg>الأكثر مبيعاً</span><span class="v">+1.5k مباع</span></div></div><div class="info">جينز واسع<div class="p">3,290 دج</div></div></div>
+</div>
+</body></html>
