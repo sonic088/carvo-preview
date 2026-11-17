@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 838 188" width="838" height="188" fill="#FFFFFF">
+  <title>NUEIN wordmark</title>
+  <g data-letter="N" transform="translate(0,0)"><path d="M0,188 L0,0 L109,94 L109,0 L150,0 L150,188 L41,94 L41,188 Z"/></g>
+  <g data-letter="U" transform="translate(198,0)"><path d="M0,0 L0,107.5 C0,151.959 36.0411,188 80.5,188 C124.959,188 161,151.959 161,107.5 L161,0 L118,0 L118,107.5 C118,128.211 101.211,145 80.5,145 C59.7893,145 43,128.211 43,107.5 L43,0 Z"/></g>
+  <g data-letter="E" transform="translate(407,0)"><path d="M0,0 H143 V37 H42 V76 H132 V112 H42 V151 H143 V188 H0 Z"/></g>
+  <g data-letter="I" transform="translate(598,0)"><path d="M0,0 H42 V188 H0 Z"/></g>
+  <g data-letter="N" transform="translate(688,0)"><path d="M0,188 L0,0 L109,94 L109,0 L150,0 L150,188 L41,94 L41,188 Z"/></g>
+</svg>
