@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="ltr" class="nuein-splash">
 <head>
   <!-- warm the photo + API hosts before Flutter asks for them (first images / first scroll come sooner) -->
   <link rel="preconnect" href="https://carvo-img.abdeslam-gh17.workers.dev">
@@ -47,6 +47,8 @@
   <style>
     /* White like the tab bar, so a short layout viewport can never show a coloured band. */
     html, body { margin: 0; padding: 0; height: 100%; background: #FFFFFF; }
+    /* While the launch splash shows, everything behind it is black too: no white band can appear under it. */
+    html.nuein-splash, html.nuein-splash body, html.nuein-splash #carvo-host { background: #000000; }
     /* iPhone home-screen app: the page itself never scrolls or bounces; Flutter draws into #carvo-host. */
     /* Nothing here is position: fixed. In the standalone app WebKit sizes the layout viewport short by the status
        bar and clips fixed boxes (and fixed bodies) to it, so v82/v83 laid the app out full height but only the top
@@ -137,9 +139,16 @@
         }
         return h;
       }
+      // A short visual viewport only means "keyboard" while a text field really has focus. Without that check a
+      // home-screen app whose visual viewport reads short (Page Zoom, status bar) was taken for "keyboard up" and the
+      // whole app, launch splash included, was drawn ~3/4 tall with a white band under it.
+      function typing() {
+        var a = document.activeElement;
+        return !!(a && (a.isContentEditable || a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'));
+      }
       function keyboardOpen() {
         var vv = window.visualViewport;
-        return !!(host && vv && vv.height < fullHeight() * 0.75);
+        return !!(host && vv && typing() && vv.height < fullHeight() * 0.75);
       }
       function sizeHost() {
         if (!host) return;
@@ -188,6 +197,7 @@
             window.visualViewport.addEventListener('scroll', sizeHost);
           }
           document.addEventListener('visibilitychange', sizeHost);
+          document.addEventListener('focusout', function () { setTimeout(sizeHost, 50); }, true);
         }
         return host;
       };
@@ -252,6 +262,8 @@
       // Called by lib/launch_splash.dart after Flutter has painted the identical screen underneath.
       window.carvoSplashDone = function () {
         if (!el) return;
+        // Flutter keeps its identical splash for the rest of the entry animation: stay black until it is over.
+        setTimeout(function () { document.documentElement.classList.remove('nuein-splash'); }, 3400);
         window.removeEventListener('resize', size);
         el.parentNode && el.parentNode.removeChild(el);
         el = null;
