@@ -439,6 +439,44 @@
       };
     })();
   </script>
+  <script>
+    // Diagnostic (owner's iPhone: a page turns grey = a Flutter build error). The app prints the error to the console;
+    // this keeps the last ones and shows a small "!" at the top only when there is one. Tap it to read / copy, tap again to hide.
+    (function () {
+      var errs = [], btn = null, box = null;
+      var noise = /fonts\.gstatic|Noto|Failed to fetch|Retrying|permanently unavailable|Could not find a set of Noto|GL Driver/;
+      var hit = /exception|Null check|RangeError|TypeError|StateError|NoSuchMethod|Bad state|is not a subtype|Unsupported operation|Assertion/i;
+      function show() {
+        if (!document.body) return;
+        if (!btn) {
+          btn = document.createElement('button');
+          btn.textContent = '!';
+          btn.setAttribute('aria-label', 'Erreur');
+          btn.style.cssText = 'position:fixed;z-index:2147483647;top:calc(env(safe-area-inset-top,0px) + 6px);left:6px;width:28px;height:28px;border-radius:14px;border:0;background:#c2185b;color:#fff;font:700 16px system-ui;opacity:.85';
+          box = document.createElement('pre');
+          box.style.cssText = 'display:none;position:fixed;z-index:2147483647;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 40px);max-height:60vh;overflow:auto;margin:0;padding:10px;background:#fff;color:#111;border:1px solid #c2185b;border-radius:8px;font:11px/1.4 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text';
+          btn.onclick = function () { box.style.display = box.style.display === 'none' ? 'block' : 'none'; };
+          document.body.appendChild(btn); document.body.appendChild(box);
+        }
+        box.textContent = errs.join('\n\n');
+      }
+      function catchIt(kind, args) {
+        try {
+          var s = Array.prototype.map.call(args, function (a) { return a && a.stack ? a.stack : String(a); }).join(' ');
+          if (!s || noise.test(s) || !hit.test(s)) return;
+          errs.push(new Date().toISOString().slice(11, 19) + ' ' + kind + ': ' + s.slice(0, 1200));
+          if (errs.length > 6) errs.shift();
+          show();
+        } catch (e) {}
+      }
+      ['log', 'warn', 'error'].forEach(function (k) {
+        var orig = console[k];
+        console[k] = function () { catchIt(k, arguments); return orig.apply(console, arguments); };
+      });
+      window.addEventListener('error', function (e) { catchIt('onerror', [e.message]); });
+      window.addEventListener('unhandledrejection', function (e) { catchIt('promise', [e.reason]); });
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
   <script>
     if ('serviceWorker' in navigator) {
