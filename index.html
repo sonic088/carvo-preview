@@ -41,14 +41,16 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>NUEIN</title>
-  <meta name="theme-color" content="#000000">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="manifest" href="manifest.json">
+  <!-- Start downloading the app at once, in parallel with flutter_bootstrap.js: shorter blank screen before the logo. -->
+  <link rel="preload" href="main.dart.js" as="script">
 
   <style>
     /* White like the tab bar, so a short layout viewport can never show a coloured band. */
     html, body { margin: 0; padding: 0; height: 100%; background: #FFFFFF; }
-    /* While the launch splash shows, everything behind it is black too: no white band can appear under it. */
-    html.nuein-splash, html.nuein-splash body, html.nuein-splash #carvo-host { background: #000000; }
+    /* While the launch splash shows, everything behind it is white like the splash (owner, 19 Nov: white splash). */
+    html.nuein-splash, html.nuein-splash body, html.nuein-splash #carvo-host { background: #FFFFFF; }
     /* iPhone home-screen app: the page itself never scrolls or bounces; Flutter draws into #carvo-host. */
     /* Nothing here is position: fixed. In the standalone app WebKit sizes the layout viewport short by the status
        bar and clips fixed boxes (and fixed bodies) to it, so v82/v83 laid the app out full height but only the top
@@ -72,14 +74,14 @@
        once Flutter has painted and calls carvoSplashDone()). Absolute, not fixed (see the PWA note above). */
     #carvo-splash {
       position: absolute; left: 0; top: 0; width: 100%; height: 100vh; z-index: 2147483647; overflow: hidden;
-      background: #000000;
+      background: #FFFFFF;
       -webkit-user-select: none; user-select: none; pointer-events: none;
     }
     #carvo-splash-lockup {
       position: absolute; left: 50%; top: 50%; width: 268.5px; height: 90px;
       margin-left: -134.25px; margin-top: -45px; transform-origin: 50% 50%;
     }
-    /* Owner (19 Nov): only Flutter's logo. The HTML splash stays a plain black screen until Flutter paints its lockup;
+    /* Owner (19 Nov): only Flutter's logo. The HTML splash stays a plain white screen until Flutter paints its lockup;
        Flutter's Netflix-style intro (lib/launch_splash.dart) then starts from its own first frame. */
     #carvo-splash-lockup { visibility: hidden; }
     #carvo-splash-lockup svg { width: 268.5px; height: 90px; display: block; overflow: visible; }
@@ -278,7 +280,7 @@
       // Called by lib/launch_splash.dart after Flutter has painted the identical screen underneath.
       window.carvoSplashDone = function () {
         if (!el) return;
-        // Flutter keeps its identical splash for the rest of the entry animation: stay black until it is over.
+        // Flutter keeps its identical splash for the rest of the entry animation: stay white until it is over.
         setTimeout(function () { document.documentElement.classList.remove('nuein-splash'); }, 3400);
         window.removeEventListener('resize', size);
         el.parentNode && el.parentNode.removeChild(el);
