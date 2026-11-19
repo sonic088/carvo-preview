@@ -1,5 +1,5 @@
 // NUEIN PWA service worker: network-first with cache fallback (offline support).
-const CACHE = 'carvo-v199'; // bump to force clients to drop old caches
+const CACHE = 'carvo-v200'; // bump to force clients to drop old caches
 const CORE = ['./', 'index.html', 'manifest.json', 'flutter_bootstrap.js', 'main.dart.js', 'favicon.png', 'icons/Icon-192.png', 'splash/splash_bg.jpg', 'splash/splash_wordmark.png', 'splash/splash_tagline.png'];
 
 const IMG = 'carvo-img-v1', IMG_MAX = 400; // ~400 WebP renditions (~15-70 KB each) <= ~20 MB
@@ -59,6 +59,22 @@ self.addEventListener('fetch', (event) => {
   // Media goes straight to the network: iOS Safari streams video with Range requests (206), which a SW fetch +
   // cache.put would turn into whole-file copies in memory (and cache.put rejects 206).
   if (req.headers.has('range') || /\.(mp4|m4v|mov|webm|m3u8|ts)$/i.test(url.pathname)) return;
+  // Fast start: the engine and its assets (same build as the page, cache dropped on every CACHE bump) answer from
+  // the cache at once and refresh in the background, so a repeat launch does not wait on the network before Flutter
+  // can paint its NUEIN logo. The page itself (navigation, index.html, sw.js) stays network-first so a new build is
+  // still picked up.
+  if (req.mode !== 'navigate' && !/(^|\/)(index\.html|sw\.js|version\.json)$/.test(url.pathname) &&
+      /\.(js|mjs|wasm|json|otf|ttf|woff2?|png|jpg|jpeg|webp|svg)$/i.test(url.pathname)) {
+    event.respondWith(caches.open(CACHE).then((c) => c.match(req).then((hit) => {
+      const net = fetch(req, { cache: 'no-cache' }).then((res) => {
+        if (res.ok && res.status === 200) c.put(req, res.clone()).catch(() => {});
+        return res;
+      });
+      if (hit) { net.catch(() => {}); return hit; }
+      return net.catch(() => fetch(req));
+    })));
+    return;
+  }
   event.respondWith(
     fetch(req, { cache: 'no-cache' }) // always revalidate with the server so new builds show up on reload
       .then((res) => {

@@ -43,6 +43,8 @@
   <title>NUEIN</title>
   <meta name="theme-color" content="#000000">
   <link rel="manifest" href="manifest.json">
+  <!-- Start downloading the app at once, in parallel with flutter_bootstrap.js: shorter black screen before the logo. -->
+  <link rel="preload" href="main.dart.js" as="script">
 
   <style>
     /* White like the tab bar, so a short layout viewport can never show a coloured band. */
