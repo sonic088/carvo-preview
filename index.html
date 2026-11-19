@@ -43,8 +43,38 @@
   <title>NUEIN</title>
   <meta name="theme-color" content="#FFFFFF">
   <link rel="manifest" href="manifest.json">
-  <!-- Start downloading the app at once, in parallel with flutter_bootstrap.js: shorter blank screen before the logo. -->
+  <!-- Start downloading the app at once, in parallel with flutter_bootstrap.js: shorter wait before the app. -->
   <link rel="preload" href="main.dart.js" as="script">
+  <link rel="preload" href="flutter_bootstrap.js" as="script">
+  <script>
+    // Shorter wait before Flutter's first frame. The engine only starts its CanvasKit download when
+    // flutter_bootstrap.js runs, and only fetches the fonts (all awaited before the first frame) after main.dart.js
+    // has loaded and started: ask for both now, in parallel. Same URLs and fetch mode as flutter.js / the engine
+    // (fetch, same-origin credentials), so the browser reuses these responses instead of downloading twice.
+    (function () {
+      function preload(href, as, module) {
+        var l = document.createElement('link');
+        l.rel = module ? 'modulepreload' : 'preload';
+        if (!module) { l.as = as; if (as === 'fetch') l.crossOrigin = 'anonymous'; }
+        l.href = href;
+        document.head.appendChild(l);
+      }
+      try {
+        // flutter.js picks the Chromium CanvasKit build only on Blink with these APIs; the full build everywhere else
+        // (iPhone Safari / home-screen app included).
+        var blink = navigator.vendor === 'Google Inc.' || navigator.userAgent.indexOf('Edg/') >= 0;
+        var chromium = blink && typeof ImageDecoder !== 'undefined' && typeof Intl.v8BreakIterator !== 'undefined' &&
+          typeof Intl.Segmenter !== 'undefined';
+        var ck = chromium ? 'canvaskit/chromium/' : 'canvaskit/';
+        preload('canvaskit/canvaskit.js'.replace('canvaskit/', ck), 'script', true);
+        preload(ck + 'canvaskit.wasm', 'fetch');
+        // Fonts from the build's own manifest, so this list never drifts from pubspec.yaml.
+        fetch('assets/FontManifest.json').then(function (r) { return r.ok ? r.json() : []; }).then(function (m) {
+          (m || []).forEach(function (f) { (f.fonts || []).forEach(function (x) { preload('assets/' + x.asset, 'fetch'); }); });
+        }).catch(function () {});
+      } catch (e) {}
+    })();
+  </script>
 
   <style>
     /* White like the tab bar, so a short layout viewport can never show a coloured band. */
@@ -81,9 +111,12 @@
       position: absolute; left: 50%; top: 50%; width: 268.5px; height: 90px;
       margin-left: -134.25px; margin-top: -45px; transform-origin: 50% 50%;
     }
-    /* Owner (19 Nov): only Flutter's logo. The HTML splash stays a plain white screen until Flutter paints its lockup;
-       Flutter's Netflix-style intro (lib/launch_splash.dart) then starts from its own first frame. */
-    #carvo-splash-lockup { visibility: hidden; }
+    /* One logo only (owner, 19 Nov). From the very first paint this shows the intro's "N" (black, same size and
+       place as lib/launch_splash.dart) while Flutter loads; Flutter continues the intro from the same state and this
+       copy is removed in that frame (carvoSplashDone). Starts invisible: the script below fades it in. */
+    #nuein-letters > g + g, #nuein-tagline { display: none; }
+    #nuein-letters > g:first-child { opacity: 0; }
+    html.nuein-reduced #nuein-letters > g + g, html.nuein-reduced #nuein-tagline { display: inline; }
     #carvo-splash-lockup svg { width: 268.5px; height: 90px; display: block; overflow: visible; }
   </style>
   <script>
@@ -222,12 +255,12 @@
 <body>
   <div id="carvo-splash" aria-label="NUEIN - Style made for you"><div id="carvo-splash-lockup"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 838 280.8" width="838" height="280.8" aria-hidden="true">
   <title>NUEIN — STYLE MADE FOR YOU</title>
-  <g fill="#FFFFFF" id="nuein-letters"><g data-letter="N" transform="translate(0,0)"><path d="M0,188 L0,0 L109,94 L109,0 L150,0 L150,188 L41,94 L41,188 Z"/></g>
+  <g fill="#000000" id="nuein-letters"><g data-letter="N" transform="translate(0,0)"><path d="M0,188 L0,0 L109,94 L109,0 L150,0 L150,188 L41,94 L41,188 Z"/></g>
   <g data-letter="U" transform="translate(198,0)"><path d="M0,0 L0,107.5 C0,151.959 36.0411,188 80.5,188 C124.959,188 161,151.959 161,107.5 L161,0 L118,0 L118,107.5 C118,128.211 101.211,145 80.5,145 C59.7893,145 43,128.211 43,107.5 L43,0 Z"/></g>
   <g data-letter="E" transform="translate(407,0)"><path d="M0,0 H143 V37 H42 V76 H132 V112 H42 V151 H143 V188 H0 Z"/></g>
   <g data-letter="I" transform="translate(598,0)"><path d="M0,0 H42 V188 H0 Z"/></g>
   <g data-letter="N" transform="translate(688,0)"><path d="M0,188 L0,0 L109,94 L109,0 L150,0 L150,188 L41,94 L41,188 Z"/></g></g>
-  <g id="nuein-tagline" fill="#FFFFFF">
+  <g id="nuein-tagline" fill="#000000">
   
   <path fill="#FFFFFF" d="M139.650390625 281.28828125Q136.388671875 281.28828125 133.986328125 280.253125Q131.583984375 279.21796875 130.2265625 277.294140625Q128.869140625 275.3703125 128.732421875 272.7140625H133.205078125Q133.341796875 274.29609375 134.23046875 275.33125Q135.119140625 276.36640625 136.544921875 276.87421875Q137.970703125 277.38203125 139.630859375 277.38203125Q141.486328125 277.38203125 142.921875 276.805859375Q144.357421875 276.2296875 145.197265625 275.165234375Q146.037109375 274.10078125 146.037109375 272.69453125Q146.037109375 271.425 145.3046875 270.614453125Q144.572265625 269.80390625 143.33203125 269.266796875Q142.091796875 268.7296875 140.509765625 268.31953125L137.111328125 267.38203125Q133.537109375 266.425 131.53515625 264.55Q129.533203125 262.675 129.533203125 259.68671875Q129.533203125 257.1671875 130.890625 255.282421875Q132.248046875 253.39765625 134.58203125 252.352734375Q136.916015625 251.3078125 139.845703125 251.3078125Q142.833984375 251.3078125 145.109375 252.352734375Q147.384765625 253.39765625 148.68359375 255.2140625Q149.982421875 257.03046875 150.041015625 259.3546875H145.705078125Q145.490234375 257.3625 143.859375 256.26875Q142.228515625 255.175 139.748046875 255.175Q137.990234375 255.175 136.69140625 255.721875Q135.392578125 256.26875 134.6796875 257.235546875Q133.966796875 258.20234375 133.966796875 259.4328125Q133.966796875 260.81953125 134.81640625 261.669140625Q135.666015625 262.51875 136.88671875 263.016796875Q138.107421875 263.51484375 139.220703125 263.8078125L142.052734375 264.55Q143.439453125 264.9015625 144.9140625 265.497265625Q146.388671875 266.09296875 147.638671875 267.040234375Q148.888671875 267.9875 149.66015625 269.383984375Q150.431640625 270.78046875 150.431640625 272.753125Q150.431640625 275.2140625 149.162109375 277.14765625Q147.892578125 279.08125 145.48046875 280.184765625Q143.068359375 281.28828125 139.650390625 281.28828125Z"/>
   <path fill="#FFFFFF" d="M162.259765625 255.5265625V251.6984375H184.857421875V255.5265625H175.814453125V280.8H171.341796875V255.5265625Z"/>
@@ -249,32 +282,39 @@
   <script>
     (function () {
       var el = document.getElementById('carvo-splash');
-      // entry_A motion, same math as lib/launch_splash.dart NueinEntry (keep in sync).
-      var TAG_START = 1200, TAG_DUR = 700, TAG_SLIDE = 8, TOTAL = 3400, ZOOM_START = 2800, ZOOM_TO = 1.08;
-      function easeOutExpo(t){ return t<=0?0:(t>=1?1:1-Math.pow(2,-10*t)); }
-      var tag = el.querySelector('#nuein-tagline');
+      // Intro "N" state, same math as lib/launch_splash.dart NueinEntry (keep in sync): the N alone, centred,
+      // fades in (alpha ms / (N_IN * 0.8)) and grows 0.7 -> 1 (easeOutCubic over N_IN). Flutter takes over from
+      // the same clock (window.carvoSplashT0) and runs the rest (UEIN out of the N, hold, zoom into the app).
+      var N_IN = 380, N_FROM = 0.7, VIEW_W = 838, N_CX = 75; // N bounds 0..150 in the 838-wide kit
+      var reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+      // Reduced motion: the still full lockup, like Flutter's reduced-motion splash.
+      if (reduced) document.documentElement.classList.add('nuein-reduced');
       var lock = document.getElementById('carvo-splash-lockup');
-      if (tag) tag.setAttribute('opacity','0');
+      var n = el.querySelector('#nuein-letters > g');
+      if (n && !reduced) n.setAttribute('transform', 'translate(' + (VIEW_W / 2 - N_CX) + ',0)');
+      function clamp01(v) { return v < 0 ? 0 : (v > 1 ? 1 : v); }
+      function draw(ms) {
+        // Flutter draws its copy scaled by 1 / Page Zoom (lib/safe_area.dart): same size here.
+        var pz = window.carvoSplashZoom ? window.carvoSplashZoom() : 1;
+        var t = reduced ? 1 : clamp01(ms / N_IN);
+        var z = N_FROM + (1 - N_FROM) * (1 - Math.pow(1 - t, 3));
+        if (reduced) z = 1;
+        if (lock) lock.style.transform = 'scale(' + (z / pz) + ')';
+        if (n) n.style.opacity = reduced ? 1 : clamp01(ms / (N_IN * 0.8));
+      }
       function tick() {
         if (!el) return;
         if (window.carvoSplashT0 == null) window.carvoSplashT0 = performance.now();
         var ms = performance.now() - window.carvoSplashT0;
-        if (tag) {
-          var tt = easeOutExpo(Math.max(0, Math.min(1, (ms - TAG_START)/TAG_DUR)));
-          tag.setAttribute('opacity', tt);
-          tag.setAttribute('transform', 'translate(0,'+((1-tt)*TAG_SLIDE*(838/268.5))+')');
-        }
-        if (lock) {
-          var z = 1 + (ZOOM_TO-1) * Math.max(0, Math.min(1, (ms - ZOOM_START)/(TOTAL-ZOOM_START)));
-          // Flutter draws its copy of the lockup scaled by 1 / Page Zoom (lib/safe_area.dart): same size here, or the
-          // logo shows small first and the Flutter one takes over bigger.
-          var pz = window.carvoSplashZoom ? window.carvoSplashZoom() : 1;
-          lock.style.transform = 'scale('+(z/pz)+')';
-        }
-        if (ms < TOTAL) requestAnimationFrame(tick);
+        draw(ms);
+        if (ms < N_IN) requestAnimationFrame(tick); // then still until Flutter takes over (no work while it loads)
       }
+      draw(0);
       requestAnimationFrame(tick);
-      function size() { if (el && window.carvoSplashHeight) el.style.height = window.carvoSplashHeight() + 'px'; }
+      function size() {
+        if (el && window.carvoSplashHeight) el.style.height = window.carvoSplashHeight() + 'px';
+        if (el && window.carvoSplashT0 != null) draw(performance.now() - window.carvoSplashT0);
+      }
       size();
       window.addEventListener('resize', size);
       // Called by lib/launch_splash.dart after Flutter has painted the identical screen underneath.

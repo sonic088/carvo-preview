@@ -1,5 +1,5 @@
 // NUEIN PWA service worker: network-first with cache fallback (offline support).
-const CACHE = 'carvo-v200'; // bump to force clients to drop old caches
+const CACHE = 'carvo-v201'; // bump to force clients to drop old caches
 const CORE = ['./', 'index.html', 'manifest.json', 'flutter_bootstrap.js', 'main.dart.js', 'favicon.png', 'icons/Icon-192.png', 'splash/splash_bg.jpg', 'splash/splash_wordmark.png', 'splash/splash_tagline.png'];
 
 const IMG = 'carvo-img-v1', IMG_MAX = 400; // ~400 WebP renditions (~15-70 KB each) <= ~20 MB
@@ -34,8 +34,28 @@ async function staleWhileRevalidate(req) {
   return net;
 }
 
+// Also cached at install (best effort, never blocks the install): everything Flutter needs before its first frame,
+// so the very next launch paints without the network. Only the CanvasKit build this browser will use (same rule as
+// flutter.js: Chromium build on Blink with these APIs, the full build elsewhere, e.g. the iPhone), and the fonts
+// listed in the build's own FontManifest.json (all loaded before the first frame).
+async function precacheEngine(c) {
+  const ua = self.navigator ? navigator.userAgent : '';
+  const chromium = /Chrome\/|Edg\//.test(ua) && typeof ImageDecoder !== 'undefined' &&
+    typeof Intl.v8BreakIterator !== 'undefined' && typeof Intl.Segmenter !== 'undefined';
+  const ck = chromium ? 'canvaskit/chromium/' : 'canvaskit/';
+  const urls = ['flutter.js', ck + 'canvaskit.js', ck + 'canvaskit.wasm', 'assets/FontManifest.json',
+    'assets/AssetManifest.bin.json', 'assets/AssetManifest.bin'];
+  try {
+    const m = await (await fetch('assets/FontManifest.json')).json();
+    for (const f of m) for (const x of (f.fonts || [])) urls.push('assets/' + x.asset);
+  } catch (_) {}
+  await Promise.all(urls.map((u) => c.match(u).then((hit) => hit || c.add(u)).catch(() => {})));
+}
+
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE)
+    .then((c) => c.addAll(CORE).then(() => precacheEngine(c)))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
