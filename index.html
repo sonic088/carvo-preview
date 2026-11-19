@@ -107,9 +107,23 @@
       background: #FFFFFF;
       -webkit-user-select: none; user-select: none; pointer-events: none;
     }
+    /* Exact centre (owner, 19 Nov: «Logo لي في الوسط تماماً»): #carvo-splash-fit is a 0x0 point pinned at the centre
+       of the splash (the same box Flutter's view fills: the real screen in the home-screen app, the window elsewhere).
+       The lockup hangs from it by the centre of the NUEIN wordmark INK (kit 838 x 188 -> 268.5 x 60.2363 px, centre
+       134.25 / 30.1182), not by the centre of the 90 px box that also holds the tagline: the N alone, the opening
+       word and the full NUEIN all sit on the screen centre and every scale (intro, zoom) is around that point. The
+       tagline hangs below the wordmark. Responsive (owner: «خليه يتأقلم مع أي هاتف»): the script scales the point by
+       carvoSplashLogoW() / 268.5, i.e. 0.6885 x the short side of the screen clamped to 200..340 px (268.5 on a
+       390 pt iPhone), recomputed on resize / rotation. */
+    /* Placed with a transform, not left/top 50% + negative offsets: browsers snap box offsets to whole pixels (up to
+       0.5 px off on a 375 / 393 / 915 px screen), transforms keep the exact fraction. */
+    #carvo-splash-fit {
+      position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0;
+      transform: translate(50vw, 50vh) translate(-134.25px, -30.11815px);
+    }
     #carvo-splash-lockup {
-      position: absolute; left: 50%; top: 50%; width: 268.5px; height: 90px;
-      margin-left: -134.25px; margin-top: -45px; transform-origin: 50% 50%;
+      position: absolute; left: 0; top: 0; width: 268.5px; height: 90px;
+      transform-origin: 134.25px 30.11815px;
     }
     /* One logo, one timeline (owner, 19 Nov: «كل شيء متزامن»): from the first paint this plays the whole launch
        timeline of lib/launch_splash.dart NueinEntry (same numbers, same béziers, clock window.carvoSplashT0): intro to
@@ -263,7 +277,7 @@
   </script>
 </head>
 <body>
-  <div id="carvo-splash" aria-label="NUEIN - Style made for you"><div id="carvo-splash-lockup">
+  <div id="carvo-splash" aria-label="NUEIN - Style made for you"><div id="carvo-splash-fit"><div id="carvo-splash-lockup">
 <div id="nuein-group"><div id="nuein-word"><svg viewBox="0 0 838 188" aria-hidden="true"><path transform="translate(0,0)" d="M0,188 L0,0 L109,94 L109,0 L150,0 L150,188 L41,94 L41,188 Z"/><path transform="translate(198,0)" d="M0,0 L0,107.5 C0,151.959 36.0411,188 80.5,188 C124.959,188 161,151.959 161,107.5 L161,0 L118,0 L118,107.5 C118,128.211 101.211,145 80.5,145 C59.7893,145 43,128.211 43,107.5 L43,0 Z"/><path transform="translate(407,0)" d="M0,0 H143 V37 H42 V76 H132 V112 H42 V151 H143 V188 H0 Z"/><path transform="translate(598,0)" d="M0,0 H42 V188 H0 Z"/><path transform="translate(688,0)" d="M0,188 L0,0 L109,94 L109,0 L150,0 L150,188 L41,94 L41,188 Z"/></svg></div><div id="nuein-curtain"></div></div>
 <div id="nuein-tag"><svg viewBox="0 0 838 280.8" aria-hidden="true"><path d="M139.650390625 281.28828125Q136.388671875 281.28828125 133.986328125 280.253125Q131.583984375 279.21796875 130.2265625 277.294140625Q128.869140625 275.3703125 128.732421875 272.7140625H133.205078125Q133.341796875 274.29609375 134.23046875 275.33125Q135.119140625 276.36640625 136.544921875 276.87421875Q137.970703125 277.38203125 139.630859375 277.38203125Q141.486328125 277.38203125 142.921875 276.805859375Q144.357421875 276.2296875 145.197265625 275.165234375Q146.037109375 274.10078125 146.037109375 272.69453125Q146.037109375 271.425 145.3046875 270.614453125Q144.572265625 269.80390625 143.33203125 269.266796875Q142.091796875 268.7296875 140.509765625 268.31953125L137.111328125 267.38203125Q133.537109375 266.425 131.53515625 264.55Q129.533203125 262.675 129.533203125 259.68671875Q129.533203125 257.1671875 130.890625 255.282421875Q132.248046875 253.39765625 134.58203125 252.352734375Q136.916015625 251.3078125 139.845703125 251.3078125Q142.833984375 251.3078125 145.109375 252.352734375Q147.384765625 253.39765625 148.68359375 255.2140625Q149.982421875 257.03046875 150.041015625 259.3546875H145.705078125Q145.490234375 257.3625 143.859375 256.26875Q142.228515625 255.175 139.748046875 255.175Q137.990234375 255.175 136.69140625 255.721875Q135.392578125 256.26875 134.6796875 257.235546875Q133.966796875 258.20234375 133.966796875 259.4328125Q133.966796875 260.81953125 134.81640625 261.669140625Q135.666015625 262.51875 136.88671875 263.016796875Q138.107421875 263.51484375 139.220703125 263.8078125L142.052734375 264.55Q143.439453125 264.9015625 144.9140625 265.497265625Q146.388671875 266.09296875 147.638671875 267.040234375Q148.888671875 267.9875 149.66015625 269.383984375Q150.431640625 270.78046875 150.431640625 272.753125Q150.431640625 275.2140625 149.162109375 277.14765625Q147.892578125 279.08125 145.48046875 280.184765625Q143.068359375 281.28828125 139.650390625 281.28828125Z"/>
   <path d="M162.259765625 255.5265625V251.6984375H184.857421875V255.5265625H175.814453125V280.8H171.341796875V255.5265625Z"/>
@@ -280,7 +294,7 @@
   <path d="M618.931640625 280.8V269.21796875L608.208984375 251.6984375H613.404296875L618.873046875 260.97578125Q619.791015625 262.49921875 620.484375 263.90546875Q621.177734375 265.31171875 621.919921875 267.38203125H620.494140625Q621.236328125 265.27265625 621.9296875 263.856640625Q622.623046875 262.440625 623.482421875 260.97578125L628.892578125 251.6984375H634.068359375L623.384765625 269.21796875V280.8Z"/>
   <path d="M658.416015625 281.190625Q654.646484375 281.190625 651.66796875 279.403515625Q648.689453125 277.61640625 646.98046875 274.266796875Q645.271484375 270.9171875 645.271484375 266.26875Q645.271484375 261.60078125 646.98046875 258.251171875Q648.689453125 254.9015625 651.66796875 253.1046875Q654.646484375 251.3078125 658.416015625 251.3078125Q662.185546875 251.3078125 665.14453125 253.1046875Q668.103515625 254.9015625 669.8125 258.251171875Q671.521484375 261.60078125 671.521484375 266.26875Q671.521484375 270.9171875 669.8125 274.266796875Q668.103515625 277.61640625 665.14453125 279.403515625Q662.185546875 281.190625 658.416015625 281.190625ZM658.416015625 277.128125Q660.896484375 277.128125 662.859375 275.887890625Q664.822265625 274.64765625 665.96484375 272.216015625Q667.107421875 269.784375 667.107421875 266.26875Q667.107421875 262.7140625 665.96484375 260.282421875Q664.822265625 257.85078125 662.859375 256.610546875Q660.896484375 255.3703125 658.416015625 255.3703125Q655.916015625 255.3703125 653.943359375 256.6203125Q651.970703125 257.8703125 650.828125 260.301953125Q649.685546875 262.73359375 649.685546875 266.26875Q649.685546875 269.784375 650.828125 272.20625Q651.970703125 274.628125 653.943359375 275.878125Q655.916015625 277.128125 658.416015625 277.128125Z"/>
   <path d="M696.552734375 281.24921875Q693.056640625 281.24921875 690.439453125 279.9015625Q687.822265625 278.55390625 686.38671875 276.200390625Q684.951171875 273.846875 684.951171875 270.8V251.6984375H689.404296875V270.42890625Q689.404296875 272.4015625 690.2734375 273.925Q691.142578125 275.4484375 692.744140625 276.32734375Q694.345703125 277.20625 696.552734375 277.20625Q698.740234375 277.20625 700.33203125 276.32734375Q701.923828125 275.4484375 702.783203125 273.925Q703.642578125 272.4015625 703.642578125 270.42890625V251.6984375H708.115234375V270.8Q708.115234375 273.846875 706.6796875 276.200390625Q705.244140625 278.55390625 702.63671875 279.9015625Q700.029296875 281.24921875 696.552734375 281.24921875Z"/></svg></div>
-</div></div>
+</div></div></div>
   <script>
     (function () {
       var el = document.getElementById('carvo-splash');
@@ -289,6 +303,7 @@
       var RECENTRE = 838 / 2 - 75, CURTAIN_RUN = 838 + 2 - 152; // NueinEntry: N centre 75, wipe 152 -> 840
       var EASE_OUT = 'cubic-bezier(0.33, 1, 0.68, 1)', EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.35, 1)';
       var EASE_IN = 'cubic-bezier(0.32, 0, 0.67, 0)', LOCKUP = 1150; // NueinEntry.easeIn, NueinEntry.lockupMs
+      var LOGO_K = 268.5 / 390, LOGO_MIN = 200, LOGO_MAX = 340; // NueinEntry.logoK / logoMin / logoMax
       var reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
       if (reduced) document.documentElement.classList.add('nuein-reduced'); // still full lockup, like Flutter's
       var lock = document.getElementById('carvo-splash-lockup');
@@ -325,11 +340,20 @@
       if (!reduced && group) group.style.transform = 'translateX(' + (RECENTRE * S) + 'px)';
       // t0 = the first frame the page actually paints, so the N's fade-in is never skipped.
       requestAnimationFrame(function (ts) { start(document.timeline ? document.timeline.currentTime : ts); });
+      var fit = document.getElementById('carvo-splash-fit');
       function size() {
-        if (el && window.carvoSplashHeight) el.style.height = window.carvoSplashHeight() + 'px';
+        if (!el) return;
+        var h = window.carvoSplashHeight ? window.carvoSplashHeight() : window.innerHeight;
+        el.style.height = h + 'px';
+        // Same rule as lib/launch_splash.dart NueinEntry.logoWidth, on the size Flutter lays out (CSS px x Page Zoom).
+        var z = pz(), w = Math.min(window.innerWidth, h) * z;
+        var lw = Math.min(LOGO_MAX, Math.max(LOGO_MIN, w * LOGO_K));
+        if (fit) fit.style.transform = 'translate(' + (window.innerWidth / 2) + 'px, ' + (h / 2) + 'px) scale(' + (lw / 268.5) +
+          ') translate(-134.25px, -30.11815px)';
       }
       size();
       window.addEventListener('resize', size);
+      window.addEventListener('orientationchange', function () { setTimeout(size, 300); });
       // Called by lib/launch_splash.dart once the app is painted under this splash and its frames are steady: run
       // the end of the timeline (NueinEntry exit*) as compositor animations, never before the full lockup is reached:
       // zoom toward the camera (easeIn, 600 ms), the ink fades in its second half, the whole splash dissolves into
