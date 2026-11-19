@@ -326,14 +326,15 @@
         el.parentNode && el.parentNode.removeChild(el);
         el = null;
       };
-      // Never hang on the welcome screen: once Flutter has put its view in the page, the HTML copy leaves after
-      // at most 3 s even if the Flutter side never calls carvoSplashDone; and after 15 s it leaves regardless,
-      // so a failed boot shows the page instead of a frozen splash.
+      // Never hang on the welcome screen: after 15 s the HTML copy leaves regardless, so a failed boot shows the page
+      // instead of a frozen splash. Otherwise it stays until Flutter has painted its N (carvoSplashDone): Flutter puts
+      // its view in the page long before its first frame (main() loads the catalogue first), and leaving on that
+      // (the old 3 s rule) blanked the logo for seconds before Flutter's own appeared.
       var started = performance.now();
       (function watch() {
         if (!el) return;
         var t = performance.now() - started;
-        if ((document.querySelector('flutter-view, flt-glass-pane') && t > 3000) || t > 15000) { window.carvoSplashDone(); return; }
+        if (t > 15000) { window.carvoSplashDone(); return; }
         setTimeout(watch, 250);
       })();
     })();
