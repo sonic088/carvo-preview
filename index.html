@@ -445,7 +445,7 @@
     (function () {
       var errs = [], btn = null, box = null;
       var noise = /fonts\.gstatic|Noto|Failed to fetch|Retrying|permanently unavailable|Could not find a set of Noto|GL Driver/;
-      var hit = /exception|Null check|RangeError|TypeError|StateError|NoSuchMethod|Bad state|is not a subtype|Unsupported operation|Assertion/i;
+      var hit = /exception|Null check|RangeError|TypeError|StateError|NoSuchMethod|Bad state|is not a subtype|Unsupported operation|Assertion|Concurrent/i;
       function show() {
         if (!document.body) return;
         if (!btn) {
