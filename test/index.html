@@ -396,14 +396,15 @@
           document.documentElement.classList.remove('nuein-splash');
         }, Math.max(0, x0 + total - now) + 50);
       };
-      // Never hang on the welcome screen: if Flutter has not even put its view in the page after 15 s (failed boot),
-      // or has not taken over 40 s after that, the HTML copy leaves so the page shows instead of a frozen splash.
-      // Otherwise it stays until Flutter shows the same still lockup and calls carvoSplashDone.
-      var started = performance.now();
+      // Never hang on the welcome screen (owner, 19 Nov: «يبقا علاق في logo»): the HTML copy leaves 6 s after
+      // Flutter has put its view in the page even if the app never calls carvoSplashDone (a real iPhone may never
+      // report steady frames), 15 s after start if no view came at all (failed boot), and 20 s after start at worst.
+      var started = performance.now(), viewAt = 0;
       (function watch() {
         if (!el || exiting) return;
-        var t = performance.now() - started;
-        if ((t > 15000 && !document.querySelector('flutter-view, flt-glass-pane')) || t > 40000) { window.carvoSplashDone(); return; }
+        var now = performance.now(), t = now - started;
+        if (!viewAt && document.querySelector('flutter-view, flt-glass-pane')) viewAt = now;
+        if ((viewAt && now - viewAt > 6000) || (!viewAt && t > 15000) || t > 20000) { window.carvoSplashDone(); return; }
         setTimeout(watch, 250);
       })();
     })();
