@@ -1,0 +1,16 @@
+/*
+  X-Content-Type-Options: nosniff
+/sw.js
+  Cache-Control: no-cache
+/test/sw.js
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/test/
+  Cache-Control: no-cache
+/canvaskit/*
+  Cache-Control: public, max-age=604800
+/test/canvaskit/*
+  Cache-Control: public, max-age=604800

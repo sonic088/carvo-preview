@@ -1,0 +1,2 @@
+# Cloudflare Pages (nuein.pages.dev): the build has <base href="/carvo-preview/">, so serve those paths from the root.
+/carvo-preview/* /:splat 200
