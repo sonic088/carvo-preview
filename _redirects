@@ -1,2 +1,4 @@
-# Cloudflare Pages (nuein.pages.dev): the build has <base href="/carvo-preview/">, so serve those paths from the root.
-/carvo-preview/* /:splat 200
+# nuein.pages.dev → the NUEIN app built from carvo-design (Cloudflare Pages project nuein-app, owner « انشر » 20/11).
+# /media/* stays here (dev banner images). github.io/carvo-preview is unchanged.
+/media/* /media/:splat 200
+/* https://nuein-app.pages.dev/:splat 302
