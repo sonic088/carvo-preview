@@ -1,0 +1,30 @@
+{
+  "ar home": [],
+  "ar category": [],
+  "ar trends": [],
+  "ar cart": [],
+  "ar me": [],
+  "ar search": [],
+  "ar product": [],
+  "ar checkout": [],
+  "ar orders": [
+    "A RenderFlex overflowed by 1.5 pixels on the right. — Row Row:file:///workspace/w3/lib/screens/account_screens.dart:3414:9"
+  ],
+  "ar wishlist": [],
+  "ar account": [],
+  "ar settings": [],
+  "en home": [],
+  "en category": [],
+  "en trends": [],
+  "en cart": [],
+  "en me": [],
+  "en search": [],
+  "en product": [],
+  "en checkout": [],
+  "en orders": [
+    "A RenderFlex overflowed by 1.5 pixels on the right. — Row Row:file:///workspace/w3/lib/screens/account_screens.dart:3414:9"
+  ],
+  "en wishlist": [],
+  "en account": [],
+  "en settings": []
+}
