@@ -1,4 +1,7 @@
-# nuein.pages.dev → the NUEIN app built from carvo-design (Cloudflare Pages project nuein-app, owner « انشر » 20/11).
-# /media/* stays here (dev banner images). github.io/carvo-preview is unchanged.
+# nuein.pages.dev → the NUEIN app (Cloudflare Pages project nuein-app, owner « انشر » 20/11).
+# index.html + sw.js here clear the old service worker on phones that still have it, then redirect.
 /media/* /media/:splat 200
+/sw.js /sw.js 200
+/carvo-preview/sw.js /sw.js 200
+/ /index.html 200
 /* https://nuein-app.pages.dev/:splat 302
