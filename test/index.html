@@ -444,7 +444,7 @@
     // this keeps the last ones and shows a small "!" at the top only when there is one. Tap it to read / copy, tap again to hide.
     (function () {
       var errs = [], btn = null, box = null;
-      var noise = /fonts\.gstatic|Noto|Failed to fetch|Retrying|permanently unavailable|Could not find a set of Noto|GL Driver/;
+      var noise = /ethereum|solana|web3|fonts\.gstatic|Noto|Failed to fetch|Retrying|permanently unavailable|Could not find a set of Noto|GL Driver/;
       var hit = /exception|Null check|RangeError|TypeError|StateError|NoSuchMethod|Bad state|is not a subtype|Unsupported operation|Assertion|Concurrent/i;
       function show() {
         if (!document.body) return;
